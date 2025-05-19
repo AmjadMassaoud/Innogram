@@ -1,4 +1,11 @@
 {
+  "compilerOptions": {
+    "module": "ES2022",
+    "target": "ES2022",
+    "strict": true,
+    "outDir": "./dist",
+    "rootDir": "./apps"
+  },
   "extends": "./tsconfig.json",
   "exclude": ["node_modules", "test", "dist", "**/*spec.ts"]
 }

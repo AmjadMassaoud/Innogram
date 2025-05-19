@@ -1,15 +1,16 @@
 {
   "compilerOptions": {
+    "strict": true,
     "module": "commonjs",
-    "declaration": true,
+    "declaration": false,
     "removeComments": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
-    "target": "ES2023",
+    "target": "ES2022",
     "sourceMap": true,
     "outDir": "./dist",
-    "baseUrl": "./",
+    "baseUrl": ".",
     "incremental": true,
     "skipLibCheck": true,
     "strictNullChecks": true,
@@ -17,6 +18,8 @@
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
-    "paths": {}
+    "paths": {
+      "@app/config-lib": ["libs/config-lib/src/index.ts"]
+    }
   }
 }
