@@ -3,9 +3,10 @@
   "compilerOptions": {
     "strict": true,
     "target": "ES2022",
-    "declaration": false,
-    "outDir": "../../dist/apps/posts-service",
-    "rootDir": "../../"
+    "outDir": "../../dist/libs/config-lib",
+    "declaration": true,
+    "declarationMap": true,
+    "rootDir": "src"
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "test", "**/*spec.ts"]
