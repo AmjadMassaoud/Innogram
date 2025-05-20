@@ -1,8 +1,11 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
+    "strict": true,
+    "target": "ES2022",
     "declaration": false,
-    "outDir": "../../dist/apps/posts-service"
+    "outDir": "../../dist/apps/posts-service",
+    "rootDir": "../../"
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "test", "**/*spec.ts"]
