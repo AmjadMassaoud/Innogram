@@ -15,6 +15,9 @@ export class TokenEntity {
   userEmail!: string;
 
   @Column()
+  userPassword!: string;
+
+  @Column()
   refreshToken!: string;
 
   @Column({ default: true })
