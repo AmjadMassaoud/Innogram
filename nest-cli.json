@@ -19,6 +19,33 @@
         "tsConfigPath": "apps/api-gateway/tsconfig.app.json"
       }
     },
+    "chats-service": {
+      "type": "application",
+      "root": "apps/chats-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/chats-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/chats-service/tsconfig.app.json"
+      }
+    },
+    "config-lib": {
+      "type": "library",
+      "root": "libs/config-lib",
+      "entryFile": "index",
+      "sourceRoot": "libs/config-lib/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/config-lib/tsconfig.lib.json"
+      }
+    },
+    "entities-lib": {
+      "type": "library",
+      "root": "libs/entities-lib",
+      "entryFile": "index",
+      "sourceRoot": "libs/entities-lib/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/entities-lib/tsconfig.lib.json"
+      }
+    },
     "notifications-service": {
       "type": "application",
       "root": "apps/notifications-service",
@@ -44,24 +71,6 @@
       "sourceRoot": "apps/user-service/src",
       "compilerOptions": {
         "tsConfigPath": "apps/user-service/tsconfig.app.json"
-      }
-    },
-    "chats-service": {
-      "type": "application",
-      "root": "apps/chats-service",
-      "entryFile": "main",
-      "sourceRoot": "apps/chats-service/src",
-      "compilerOptions": {
-        "tsConfigPath": "apps/chats-service/tsconfig.app.json"
-      }
-    },
-    "config-lib": {
-      "type": "library",
-      "root": "libs/config-lib",
-      "entryFile": "index",
-      "sourceRoot": "libs/config-lib/src",
-      "compilerOptions": {
-        "tsConfigPath": "libs/config-lib/tsconfig.lib.json"
       }
     }
   }
