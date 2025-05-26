@@ -4,30 +4,40 @@ import {
   Entity,
   CreateDateColumn,
   UpdateDateColumn,
+  ObjectId,
 } from 'typeorm';
 
 @Entity('tokens')
 export class TokenEntity {
   @ObjectIdColumn()
-  id!: string;
+  id!: ObjectId;
 
-  @Column()
+  @Column({ type: 'string' })
+  userId!: string;
+
+  @Column({ type: 'string' })
+  username!: string;
+
+  @Column({ type: 'string', unique: true })
   userEmail!: string;
 
-  @Column()
+  @Column({ type: 'string' })
   userPassword!: string;
 
-  @Column()
+  @Column({ type: 'string' })
   refreshToken!: string;
 
-  @Column({ default: true })
+  @Column({ type: 'string' })
+  type!: string;
+
+  @Column({ type: 'string', default: true })
   isValid!: boolean;
 
   @CreateDateColumn()
   createdAt!: Date;
 
   @UpdateDateColumn()
-  updatedAt!: Date;
+  databaseUpdatedAt!: Date;
 
   @Column()
   expiresAt!: Date;

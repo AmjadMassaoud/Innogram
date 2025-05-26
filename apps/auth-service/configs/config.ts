@@ -3,7 +3,7 @@ import path from 'path';
 import Joi from 'joi';
 
 dotenv.config({
-  path: path.resolve(__dirname, '../../.env'),
+  path: path.resolve(__dirname, '../.env'),
 });
 
 const envSchema = Joi.object().keys({

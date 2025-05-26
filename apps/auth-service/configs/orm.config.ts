@@ -1,4 +1,3 @@
-import dotenv from 'dotenv';
 import { DataSource, DataSourceOptions } from 'typeorm';
 import config from './config';
 import { TokenEntity } from '../entities/token-entity';
