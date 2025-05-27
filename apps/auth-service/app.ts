@@ -1,9 +1,10 @@
-import express, { Request, Response } from 'express';
+import express from 'express';
 import authController from './controllers/auth.controller';
-import passwordRouter from './routes/password.route';
+import passwordRouter from './controllers/password.controller';
 import corsConfig from './configs/cors.config';
 import cors from 'cors';
 import dataSource from './configs/orm.config';
+import cookieParser from 'cookie-parser';
 
 const app = express();
 
@@ -18,6 +19,7 @@ dataSource
   });
 
 app.use(express.json());
+app.use(cookieParser());
 
 app.use(express.urlencoded({ extended: true }));
 

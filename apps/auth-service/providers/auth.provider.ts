@@ -6,7 +6,7 @@ import jwt, {
 } from 'jsonwebtoken';
 import httpStatus from 'http-status';
 import * as bcrypt from 'bcrypt';
-import { ObjectId } from 'typeorm';
+import { ObjectId } from 'mongodb';
 import dataSource from '../configs/orm.config';
 import {
   generateAccessToken,
@@ -66,9 +66,9 @@ export async function handleSignUp(req: Request, res: Response): Promise<void> {
     // Set refresh token in HTTP-only cookie
     res.cookie('jid', refreshToken, {
       httpOnly: true,
-      path: '/refresh_token',
+      path: '/innogram/auth',
       sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
+      secure: config.node_env === 'production',
     });
 
     res.status(httpStatus.CREATED).json({
@@ -128,12 +128,20 @@ export async function handleLogin(req: Request, res: Response): Promise<void> {
     const accessToken = await generateAccessToken(tokenPayload);
     const refreshToken = await generateRefreshToken(tokenPayload);
 
+    // update user's refreshToken
+    await TokenRepository.update(
+      { userEmail: email },
+      {
+        refreshToken: refreshToken,
+      },
+    );
+
     // Set refresh token in HTTP-only cookie
     res.cookie('jid', refreshToken, {
       httpOnly: true,
-      path: '/refresh_token',
+      path: '/innogram/auth',
       sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
+      secure: config.node_env === 'production',
     });
 
     res.json({
@@ -165,7 +173,7 @@ export async function handleRefreshToken(
     const payload = await verifyRefreshToken(token);
 
     const user = await TokenRepository.findOne({
-      where: { id: new ObjectId(payload.userId) },
+      where: { userEmail: payload.email },
     });
 
     if (!user) {
@@ -177,6 +185,7 @@ export async function handleRefreshToken(
       userId: user.id.toHexString(),
       email: user.userEmail,
     };
+
     const accessToken = await generateAccessToken(tokenPayload);
     const refreshToken = await generateRefreshToken(tokenPayload);
 
@@ -184,9 +193,9 @@ export async function handleRefreshToken(
 
     res.cookie('jid', refreshToken, {
       httpOnly: true,
-      path: '/refresh_token',
+      path: '/innogram/auth',
       sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
+      secure: config.node_env === 'production',
     });
 
     res.json({ accessToken });
@@ -198,7 +207,7 @@ export async function handleRefreshToken(
 }
 
 export async function handleVerifyAccessToken(req: Request, res: Response) {
-  const token = req.body.token;
+  const token = req.body.accessToken;
 
   if (!token) {
     return res.status(httpStatus.BAD_REQUEST).json({
@@ -252,7 +261,7 @@ export async function handleLogout(req: Request, res: Response): Promise<void> {
     }
 
     res.clearCookie('jid', {
-      path: '/refresh_token',
+      path: '/innogram/auth',
     });
 
     res.status(httpStatus.OK).json({ message: 'Logged out successfully' });

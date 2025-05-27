@@ -13,9 +13,6 @@ export class TokenEntity {
   id!: ObjectId;
 
   @Column({ type: 'string' })
-  userId!: string;
-
-  @Column({ type: 'string' })
   username!: string;
 
   @Column({ type: 'string', unique: true })
@@ -29,9 +26,6 @@ export class TokenEntity {
 
   @Column({ type: 'string' })
   type!: string;
-
-  @Column({ type: 'string', default: true })
-  isValid!: boolean;
 
   @CreateDateColumn()
   createdAt!: Date;

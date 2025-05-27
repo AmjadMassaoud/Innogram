@@ -53,9 +53,8 @@ export async function verifyRefreshToken(
     config.jwt.refresh_token.secret,
   ) as TokenPayload;
 
-  // Check if token exists in database
   const storedToken = await tokenRepository.findOne({
-    where: { refreshToken, userId: payload.userId },
+    where: { refreshToken, userEmail: payload.email },
   });
 
   if (!storedToken) {

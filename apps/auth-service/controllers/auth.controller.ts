@@ -22,7 +22,6 @@ authController.post('/refresh_token', (req, res, next) => {
 });
 
 authController.post('/validate_accessToken', (req, res, next) => {
-  console.log('reached');
   handleVerifyAccessToken(req, res).catch(next);
 });
 
