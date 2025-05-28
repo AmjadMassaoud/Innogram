@@ -12,6 +12,8 @@ const envSchema = Joi.object().keys({
   SERVER_URL: Joi.string().required(),
   CORS_ORIGIN: Joi.string().required().default('*'),
 
+  INTERNAL_API_SECRET: Joi.string().required(),
+
   ACCESS_TOKEN_SECRET: Joi.string().min(8).required(),
   ACCESS_TOKEN_EXPIRE: Joi.string().required().default('20m'),
 
@@ -51,6 +53,11 @@ const config = {
   cors: {
     cors_origin: validatedEnv.CORS_ORIGIN,
   },
+
+  internalApiSecret: {
+    internal_api_secret: validatedEnv.INTERNAL_API_SECRET,
+  },
+
   jwt: {
     access_token: {
       secret: validatedEnv.ACCESS_TOKEN_SECRET,
@@ -66,9 +73,9 @@ const config = {
     uri: validatedEnv.MONGODB_URI,
   },
   redis: {
-    host: validatedEnv.REDIS_HOST,
-    port: validatedEnv.REDIS_PORT,
-    password: validatedEnv.REDIS_PASSWORD,
+    host: process.env.REDIS_HOST || 'localhost',
+    port: parseInt(process.env.REDIS_PORT || '6379'),
+    password: process.env.REDIS_PASSWORD,
   },
 
   google: {

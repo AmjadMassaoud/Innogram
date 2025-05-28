@@ -1,33 +1,55 @@
 import { type CorsOptions } from 'cors';
 import config from './config';
+import type { NextFunction, Request, Response } from 'express';
+import httpStatus from 'http-status';
+import cors from 'cors';
 
-const whitelist = String(config.cors.cors_origin).split('|') ?? [];
+export function corsMiddleware(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  const origin = req.headers.origin;
 
-const corsConfig: Readonly<CorsOptions> = {
-  origin(
-    origin: string | undefined,
-    callback: (
-      err: Error | null,
-      origin?: boolean | string | RegExp | Array<boolean | string | RegExp>,
-    ) => void,
-  ) {
-    if (!origin || whitelist.some((val) => origin.match(val))) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  maxAge: 86400,
-  headers: [
-    'Accept',
-    'Authorization',
-    'Content-Type',
-    'If-None-Match',
-    'BX-User-Token',
-    'Trace-Id',
-  ],
-  exposedHeaders: ['WWW-Authenticate', 'Server-Authorization'],
-  credentials: true,
-} as CorsOptions;
+  // If no origin, reject the request
+  if (!origin) {
+    return res.status(403).json({ error: 'Origin header is required' });
+  }
 
-export default corsConfig;
+  // Check if origin matches allowed origin
+  if (origin !== config.cors.cors_origin) {
+    return res.status(403).json({
+      error: 'CORS error: Origin not allowed',
+      allowedOrigin: config.cors.cors_origin,
+      receivedOrigin: origin,
+    });
+  }
+
+  // Set CORS headers
+  res.setHeader('Access-Control-Allow-Origin', config.cors.cors_origin);
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  next();
+}
+export const corsErrorHandler = (
+  err: Error,
+  _: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  if (err.message === 'Not allowed by CORS') {
+    res.status(httpStatus.FORBIDDEN).json({
+      error: 'Origin not allowed',
+      allowedOrigin: config.cors.cors_origin,
+    });
+  } else {
+    next(err);
+  }
+};
