@@ -22,21 +22,22 @@ export const requestTokenReset = async (req: Request, res: Response) => {
 
   if (!user) return res.status(404).json({ message: 'User not found' });
 
+  const tokenAlreadyissued = await userPasswordResetTokenRepo.findOneBy({
+    userEmail: user.userEmail,
+  });
+
+  if (tokenAlreadyissued && tokenAlreadyissued.expiresAt > new Date()) {
+    return res.status(httpStatus.ALREADY_REPORTED).json({
+      message: 'Reset Token is already issued',
+      resetToken: tokenAlreadyissued.hashedToken,
+    });
+  }
+
   const resetToken = crypto.randomBytes(32).toString('hex');
   const hashedToken = crypto
     .createHash('sha256')
     .update(resetToken)
     .digest('hex');
-
-  const tokenAlreadyissued = await userPasswordResetTokenRepo.findOneBy({
-    userEmail: user.userEmail,
-  });
-
-  if (tokenAlreadyissued) {
-    return res
-      .status(httpStatus.ALREADY_REPORTED)
-      .json({ message: 'Reset Token is already issued' });
-  }
 
   try {
     const userPassResetTokenRecord = userPasswordResetTokenRepo.create({
@@ -53,7 +54,7 @@ export const requestTokenReset = async (req: Request, res: Response) => {
   }
 
   // to be handled by API-GATEWAY
-  return res.json({ message: 'Password reset token generated', resetToken });
+  return res.json({ message: 'Password reset token generated', hashedToken });
 };
 
 // Reset password: verifies token and updates password
