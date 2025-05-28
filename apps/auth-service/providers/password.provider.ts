@@ -6,55 +6,69 @@ import * as crypto from 'crypto';
 import httpStatus from 'http-status';
 import * as bcrypt from 'bcrypt';
 import { passwordResetSchema } from '../schema-validations/password.validation';
-
+import {
+  setResetToken,
+  getResetToken,
+  incrementResetAttempts,
+  MAX_ATTEMPTS,
+} from '../utils/redis.util';
 // Request password reset: generates a reset token and sets expiresAt
 export const requestTokenReset = async (req: Request, res: Response) => {
   const { email } = req.body;
 
   if (!email) return res.status(400).json({ message: 'Email is required' });
 
-  const tokenRepo = dataSource.getRepository(TokenEntity);
-  const userPasswordResetTokenRepo = dataSource.getRepository(
-    PasswordResetTokenEntity,
-  );
-
-  const user = await tokenRepo.findOneBy({ userEmail: email });
-
-  if (!user) return res.status(404).json({ message: 'User not found' });
-
-  const tokenAlreadyissued = await userPasswordResetTokenRepo.findOneBy({
-    userEmail: user.userEmail,
-  });
-
-  if (tokenAlreadyissued && tokenAlreadyissued.expiresAt > new Date()) {
-    return res.status(httpStatus.ALREADY_REPORTED).json({
-      message: 'Reset Token is already issued',
-      resetToken: tokenAlreadyissued.hashedToken,
-    });
-  }
-
-  const resetToken = crypto.randomBytes(32).toString('hex');
-  const hashedToken = crypto
-    .createHash('sha256')
-    .update(resetToken)
-    .digest('hex');
-
   try {
+    const attempts = await incrementResetAttempts(email);
+    if (attempts > MAX_ATTEMPTS) {
+      return res.status(httpStatus.TOO_MANY_REQUESTS).json({
+        message: 'Too many reset attempts. Please try again in 1 hour.',
+      });
+    }
+
+    const existingToken = await getResetToken(email);
+    if (existingToken) {
+      return res.status(httpStatus.ALREADY_REPORTED).json({
+        message: 'Reset Token is already issued',
+        resetToken: existingToken,
+      });
+    }
+
+    const tokenRepo = dataSource.getRepository(TokenEntity);
+    const user = await tokenRepo.findOneBy({ userEmail: email });
+
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const hashedToken = crypto
+      .createHash('sha256')
+      .update(resetToken)
+      .digest('hex');
+
+    await setResetToken(email, hashedToken);
+
+    const userPasswordResetTokenRepo = dataSource.getRepository(
+      PasswordResetTokenEntity,
+    );
     const userPassResetTokenRecord = userPasswordResetTokenRepo.create({
       userEmail: user.userEmail,
       hashedToken: hashedToken,
       expiresAt: new Date(Date.now() + 1000 * 60 * 15),
     });
 
-    if (userPassResetTokenRecord) {
-      await userPasswordResetTokenRepo.save(userPassResetTokenRecord);
-    }
-  } catch {
-    throw new Error('Could not save user password reset token!');
-  }
+    await userPasswordResetTokenRepo.save(userPassResetTokenRecord);
 
-  // to be handled by API-GATEWAY
-  return res.json({ message: 'Password reset token generated', hashedToken });
+    return res.json({
+      message: 'Password reset token generated',
+      hashedToken,
+      attemptsRemaining: MAX_ATTEMPTS - attempts,
+    });
+  } catch (error) {
+    console.error('Password reset error:', error);
+    return res
+      .status(500)
+      .json({ message: 'Could not process password reset request' });
+  }
 };
 
 // Reset password: verifies token and updates password

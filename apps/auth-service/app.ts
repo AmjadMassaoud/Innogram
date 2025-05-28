@@ -40,10 +40,6 @@ app.use(verifyInternalReq);
 
 app.use(express.json());
 
-app.get('/innogram/test', (_, res) => {
-  res.json({ message: 'hello' });
-});
-
 app.use('/innogram/auth', authController);
 app.use('/innogram/password', passwordRouter);
 

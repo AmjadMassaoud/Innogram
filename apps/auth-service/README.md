@@ -1,56 +1,57 @@
-# Auth Service
+/# Auth Service
 
-Authentication microservice for Innogram, handling user authentication, authorization, and token management.
+Authentication microservice for Innogram application, handling user authentication, authorization, token management, and OAuth integration.
 
 ## Features
 
 - JWT-based authentication with access and refresh tokens
-- OAuth 2.0 integration with Google
-- Password reset functionality
-- Token validation and refresh mechanisms
-- Secure cookie-based refresh token storage
+- Google OAuth 2.0 integration
+- Password reset functionality with token-based verification
+- MongoDB for user and token storage
+- Secure cookie-based refresh token handling
+- Internal API secret validation
 
 ## Tech Stack
 
-- Node.js & Express.js
+- Node.js with Express.js
 - TypeORM with MongoDB
-- JWT (JSON Web Tokens)
+- JWT for token management
 - Google OAuth 2.0
 - Bcrypt for password hashing
+- Joi for request validation
 
 ## API Endpoints
 
-### Authentication
+### Authentication Routes
 
 ```http
-POST /innogram/auth/signup
-POST /innogram/auth/login
-POST /innogram/auth/logout
-POST /innogram/auth/refresh-token
-POST /innogram/auth/validate-accessToken
+POST /innogram/auth/signup      # Register new user
+POST /innogram/auth/login       # User login
+POST /innogram/auth/logout      # User logout
+POST /innogram/auth/refresh-token    # Refresh access token
+POST /innogram/auth/validate-accessToken   # Validate access token
 ```
 
-### OAuth
+### Google OAuth Routes
 
 ```http
-GET /innogram/auth/google
-GET /innogram/auth/google-callback
+GET /innogram/auth/google-callback    # Google OAuth callback handler
 ```
 
-### Password Management
+### Password Management Routes
 
 ```http
-POST /innogram/auth/request-reset
-POST /innogram/auth/reset
+POST /innogram/password/request-reset  # Request password reset
+POST /innogram/password/reset         # Reset password with token
 ```
 
 ## Environment Variables
 
 ```env
-# Server Configuration
 NODE_ENV=development
 PORT=4000
-SERVER_URL=http://localhost:4000
+SERVER_URL=http://localhost:3001
+INTERNAL_API_SECRET=your_internal_api_secret
 CORS_ORIGIN=*
 
 # JWT Configuration
@@ -62,6 +63,9 @@ REFRESH_TOKEN_COOKIE_NAME=jid
 
 # Database Configuration
 MONGODB_URI=mongodb://localhost:27017
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=
 
 # Google OAuth Configuration
 GOOGLE_CLIENT_ID=your_google_client_id
@@ -76,6 +80,7 @@ GOOGLE_CALLBACK_URL=http://localhost:4000/innogram/auth/google-callback
 ```http
 POST /innogram/auth/signup
 Content-Type: application/json
+x-internal-api-secret: your_internal_api_secret
 
 {
     "email": "user@example.com",
@@ -89,6 +94,7 @@ Content-Type: application/json
 ```http
 POST /innogram/auth/login
 Content-Type: application/json
+x-internal-api-secret: your_internal_api_secret
 
 {
     "email": "user@example.com",
@@ -99,28 +105,50 @@ Content-Type: application/json
 ### Password Reset Request
 
 ```http
-POST /innogram/auth/request-reset
+POST /innogram/password/request-reset
 Content-Type: application/json
+x-internal-api-secret: your_internal_api_secret
 
 {
     "email": "user@example.com"
 }
 ```
 
-### Password Reset
+## Security Features
 
-```http
-POST /innogram/auth/reset
-Content-Type: application/json
+- Internal API secret validation for all routes
+- HTTP-only cookies for refresh tokens
+- Password hashing with bcrypt
+- Token rotation on refresh
+- Request validation using Joi schemas
+- CORS protection
+- MongoDB for secure token storage
 
-{
-    "email": "user@example.com",
-    "resetToken": "token_from_email",
-    "newPassword": "newSecurePassword123"
-}
+## Project Structure
+
+```
+auth-service/
+├── configs/                # Configuration files
+│   ├── config.ts          # Environment configuration
+│   ├── cookie.config.ts   # Cookie settings
+│   ├── cors.config.ts     # CORS settings
+│   └── orm.config.ts      # Database configuration
+├── controllers/           # Route controllers
+├── entities/             # Database entities
+│   ├── token-entity.ts
+│   └── password-reset-token.entity.ts
+├── middlewares/          # Custom middlewares
+│   └── verify-internal-request.ts
+├── providers/            # Business logic
+│   ├── auth.provider.ts
+│   ├── google.auth.provider.ts
+│   └── password.provider.ts
+├── schema-validations/   # Request validation schemas
+├── utils/               # Utility functions
+└── app.ts              # Application setup
 ```
 
-## Installation
+## Installation & Setup
 
 1. Install dependencies:
 
@@ -128,93 +156,42 @@ Content-Type: application/json
 npm install
 ```
 
-2. Create .env file with required environment variables.
+2. Set up environment variables:
 
-3. Start the service:
+- Copy `.env.example` to `.env`
+- Fill in required values
+
+3. Start MongoDB:
+
+```bash
+# Make sure MongoDB is running on localhost:27017
+```
+
+4. Start the service:
 
 ```bash
 npm run start
 ```
-
-## Token Management
-
-### Access Token
-
-- Short-lived (20 minutes by default)
-- Sent in response body during login
-- Must be included in Authorization header for protected routes
-
-### Refresh Token
-
-- Long-lived (1 day by default)
-- Stored as HTTP-only cookie
-- Used to obtain new access tokens
-- Automatically rotated on refresh
-
-## Security Features
-
-- HTTP-only cookies for refresh tokens
-- Password hashing using bcrypt
-- Token rotation on refresh
-- CORS protection
-- Rate limiting
-- XSS protection through cookie security flags
 
 ## Error Handling
 
 The service uses standard HTTP status codes:
 
 - 200: Success
-- 400: Bad Request (invalid input)
-- 401: Unauthorized (invalid credentials)
-- 403: Forbidden (insufficient permissions)
-- 404: Not Found
-- 409: Conflict (email already exists)
+- 400: Bad Request (validation errors)
+- 401: Unauthorized
+- 403: Forbidden (invalid internal API secret)
 - 500: Internal Server Error
-
-## Integration with API Gateway
-
-The auth service is designed to work with the API Gateway for:
-
-- Token validation
-- User authentication
-- Session management
-- OAuth flow handling
 
 ## Development
 
 ```bash
 # Run in development mode
-npm run dev
+npm run start
 
-# Build the service
-npm run build
-
-# Run tests
+# Run tests (when implemented)
 npm run test
 ```
-
-## Directory Structure
-
-```
-auth-service/
-├── configs/           # Configuration files
-├── controllers/       # Route controllers
-├── entities/         # Database entities
-├── providers/        # Business logic
-├── schema-validations/ # Input validation schemas
-├── utils/           # Utility functions
-├── app.ts           # Express application setup
-└── main.ts          # Application entry point
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
 
 ## License
 
