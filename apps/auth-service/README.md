@@ -1,30 +1,53 @@
 # Auth Service
 
-Authentication microservice for the Innogram application. Handles user authentication, authorization, and token management.
+Authentication microservice for Innogram, handling user authentication, authorization, and token management.
 
 ## Features
 
-- User registration and login
 - JWT-based authentication with access and refresh tokens
-- Google OAuth 2.0 integration
+- OAuth 2.0 integration with Google
+- Password reset functionality
 - Token validation and refresh mechanisms
-- Secure password handling
+- Secure cookie-based refresh token storage
 
-## Technologies
+## Tech Stack
 
-- Node.js
-- Express.js
-- TypeORM
-- MongoDB
-- Redis
+- Node.js & Express.js
+- TypeORM with MongoDB
 - JWT (JSON Web Tokens)
 - Google OAuth 2.0
+- Bcrypt for password hashing
 
-## Environment Setup
+## API Endpoints
 
-Create a `.env` file in the root directory with the following variables:
+### Authentication
+
+```http
+POST /innogram/auth/signup
+POST /innogram/auth/login
+POST /innogram/auth/logout
+POST /innogram/auth/refresh-token
+POST /innogram/auth/validate-accessToken
+```
+
+### OAuth
+
+```http
+GET /innogram/auth/google
+GET /innogram/auth/google-callback
+```
+
+### Password Management
+
+```http
+POST /innogram/auth/request-reset
+POST /innogram/auth/reset
+```
+
+## Environment Variables
 
 ```env
+# Server Configuration
 NODE_ENV=development
 PORT=4000
 SERVER_URL=http://localhost:4000
@@ -39,9 +62,6 @@ REFRESH_TOKEN_COOKIE_NAME=jid
 
 # Database Configuration
 MONGODB_URI=mongodb://localhost:27017
-REDIS_HOST=localhost
-REDIS_PORT=6379
-REDIS_PASSWORD=
 
 # Google OAuth Configuration
 GOOGLE_CLIENT_ID=your_google_client_id
@@ -49,89 +69,117 @@ GOOGLE_CLIENT_SECRET=your_google_client_secret
 GOOGLE_CALLBACK_URL=http://localhost:4000/innogram/auth/google-callback
 ```
 
-## API Endpoints
+## API Usage Examples
 
-### Authentication
-
-- `POST /innogram/auth/signup` - Register a new user
-- `POST /innogram/auth/login` - Login user
-- `POST /innogram/auth/logout` - Logout user
-- `POST /innogram/auth/refresh-token` - Refresh access token
-- `POST /innogram/auth/validate-accessToken` - Validate access token
-
-### Google OAuth
-
-- `GET /innogram/auth/google` - Initiate Google OAuth flow
-- `GET /innogram/auth/google-callback` - Handle Google OAuth callback
-
-## Installation
-
-```bash
-# Install dependencies
-npm install
-
-# Start the service
-npm run start
-```
-
-## Usage Examples
-
-### Login
+### User Registration
 
 ```http
-POST http://localhost:4000/innogram/auth/login
+POST /innogram/auth/signup
 Content-Type: application/json
 
 {
     "email": "user@example.com",
-    "password": "password123"
+    "password": "securePassword123",
+    "username": "user123"
 }
 ```
 
-### Refresh Token
+### User Login
 
 ```http
-POST http://localhost:4000/innogram/auth/refresh-token
-```
-
-Note: Requires httpOnly cookie 'jid' containing refresh token
-
-### Validate Access Token
-
-```http
-POST http://localhost:4000/innogram/auth/validate-accessToken
+POST /innogram/auth/login
 Content-Type: application/json
 
 {
-    "accessToken": "your.access.token"
+    "email": "user@example.com",
+    "password": "securePassword123"
 }
+```
+
+### Password Reset Request
+
+```http
+POST /innogram/auth/request-reset
+Content-Type: application/json
+
+{
+    "email": "user@example.com"
+}
+```
+
+### Password Reset
+
+```http
+POST /innogram/auth/reset
+Content-Type: application/json
+
+{
+    "email": "user@example.com",
+    "resetToken": "token_from_email",
+    "newPassword": "newSecurePassword123"
+}
+```
+
+## Installation
+
+1. Install dependencies:
+
+```bash
+npm install
+```
+
+2. Create .env file with required environment variables.
+
+3. Start the service:
+
+```bash
+npm run start
 ```
 
 ## Token Management
 
-- Access tokens expire after 20 minutes
-- Refresh tokens expire after 1 day
-- Refresh tokens are stored as httpOnly cookies
-- Access tokens should be sent in Authorization header as Bearer tokens
+### Access Token
+
+- Short-lived (20 minutes by default)
+- Sent in response body during login
+- Must be included in Authorization header for protected routes
+
+### Refresh Token
+
+- Long-lived (1 day by default)
+- Stored as HTTP-only cookie
+- Used to obtain new access tokens
+- Automatically rotated on refresh
 
 ## Security Features
 
 - HTTP-only cookies for refresh tokens
-- Secure password hashing
-- JWT token validation
+- Password hashing using bcrypt
+- Token rotation on refresh
 - CORS protection
 - Rate limiting
-- XSS protection
+- XSS protection through cookie security flags
 
 ## Error Handling
 
-The service returns standard HTTP status codes:
+The service uses standard HTTP status codes:
 
 - 200: Success
-- 400: Bad Request
-- 401: Unauthorized
-- 403: Forbidden
+- 400: Bad Request (invalid input)
+- 401: Unauthorized (invalid credentials)
+- 403: Forbidden (insufficient permissions)
+- 404: Not Found
+- 409: Conflict (email already exists)
 - 500: Internal Server Error
+
+## Integration with API Gateway
+
+The auth service is designed to work with the API Gateway for:
+
+- Token validation
+- User authentication
+- Session management
+- OAuth flow handling
 
 ## Development
 
@@ -139,21 +187,35 @@ The service returns standard HTTP status codes:
 # Run in development mode
 npm run dev
 
-# Run tests
-npm run test
-
 # Build the service
 npm run build
+
+# Run tests
+npm run test
+```
+
+## Directory Structure
+
+```
+auth-service/
+├── configs/           # Configuration files
+├── controllers/       # Route controllers
+├── entities/         # Database entities
+├── providers/        # Business logic
+├── schema-validations/ # Input validation schemas
+├── utils/           # Utility functions
+├── app.ts           # Express application setup
+└── main.ts          # Application entry point
 ```
 
 ## Contributing
 
 1. Fork the repository
-2. Create your feature branch
+2. Create a feature branch
 3. Commit your changes
 4. Push to the branch
-5. Create a new Pull Request
+5. Create a Pull Request
 
 ## License
 
-This project is licensed under the MIT License
+MIT
