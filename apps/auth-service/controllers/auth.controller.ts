@@ -6,6 +6,7 @@ import {
   handleRefreshToken,
   handleVerifyAccessToken,
 } from '../providers/auth.provider';
+import { handleGoogleAuthCallback } from '../providers/google.auth.provider';
 
 const authController = Router();
 
@@ -17,16 +18,18 @@ authController.post('/signup', (req, res, next) => {
   handleSignUp(req, res).catch(next);
 });
 
-authController.post('/refresh_token', (req, res, next) => {
-  handleRefreshToken(req, res).catch(next);
-});
-
-authController.post('/validate_accessToken', (req, res, next) => {
-  handleVerifyAccessToken(req, res).catch(next);
-});
-
 authController.post('/logout', (req, res, next) => {
   handleLogout(req, res).catch(next);
 });
+
+authController.post('/refresh-token', (req, res, next) => {
+  handleRefreshToken(req, res).catch(next);
+});
+
+authController.post('/validate-accessToken', (req, res, next) => {
+  handleVerifyAccessToken(req, res).catch(next);
+});
+
+authController.post('/google-callback', handleGoogleAuthCallback);
 
 export default authController;

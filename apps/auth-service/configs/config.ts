@@ -11,15 +11,23 @@ const envSchema = Joi.object().keys({
   PORT: Joi.string().required().default('4000'),
   SERVER_URL: Joi.string().required(),
   CORS_ORIGIN: Joi.string().required().default('*'),
+
   ACCESS_TOKEN_SECRET: Joi.string().min(8).required(),
   ACCESS_TOKEN_EXPIRE: Joi.string().required().default('20m'),
+
   REFRESH_TOKEN_SECRET: Joi.string().min(8).required(),
   REFRESH_TOKEN_EXPIRE: Joi.string().required().default('1d'),
   REFRESH_TOKEN_COOKIE_NAME: Joi.string().required().default('jid'),
+
   MONGODB_URI: Joi.string().required(),
+
   REDIS_HOST: Joi.string().required(),
   REDIS_PORT: Joi.string().required().default('6379'),
   REDIS_PASSWORD: Joi.string().allow('').optional(),
+
+  GOOGLE_CLIENT_ID: Joi.string().required(),
+  GOOGLE_CLIENT_SECRET: Joi.string().required(),
+  GOOGLE_CALLBACK_URL: Joi.string().required(),
 });
 
 const { value: validatedEnv, error } = envSchema
@@ -61,6 +69,12 @@ const config = {
     host: validatedEnv.REDIS_HOST,
     port: validatedEnv.REDIS_PORT,
     password: validatedEnv.REDIS_PASSWORD,
+  },
+
+  google: {
+    clientId: validatedEnv.GOOGLE_CLIENT_ID,
+    clientSecret: validatedEnv.GOOGLE_CLIENT_SECRET,
+    callbackUrl: validatedEnv.GOOGLE_CALLBACK_URL,
   },
 } as const;
 

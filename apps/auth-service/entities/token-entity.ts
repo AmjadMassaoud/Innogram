@@ -27,6 +27,12 @@ export class TokenEntity {
   @Column({ type: 'string' })
   type!: string;
 
+  @Column({ type: 'string', nullable: true })
+  googleUserId!: string;
+
+  @Column({ type: 'string' })
+  registrationMethod!: 'innogram' | 'google';
+
   @CreateDateColumn()
   createdAt!: Date;
 

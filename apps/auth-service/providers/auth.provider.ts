@@ -6,7 +6,6 @@ import jwt, {
 } from 'jsonwebtoken';
 import httpStatus from 'http-status';
 import * as bcrypt from 'bcrypt';
-import { ObjectId } from 'mongodb';
 import dataSource from '../configs/orm.config';
 import {
   generateAccessToken,
@@ -208,6 +207,8 @@ export async function handleRefreshToken(
 
 export async function handleVerifyAccessToken(req: Request, res: Response) {
   const token = req.body.accessToken;
+
+  console.log('req body ->', req.body);
 
   if (!token) {
     return res.status(httpStatus.BAD_REQUEST).json({
