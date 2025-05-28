@@ -19,7 +19,7 @@ import { Repository } from 'typeorm';
 const oAuth2Client = new OAuth2Client(
   config.google.clientId,
   config.google.clientSecret,
-  config.google.callbackUrl, /
+  config.google.callbackUrl,
 );
 
 // Handles the callback from Google after user authentication.
@@ -27,9 +27,7 @@ export const handleGoogleAuthCallback = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
-
   const code: string = req.query.code as string;
-
 
   if (!code) {
     // Redirect to a frontend error page or send a JSON error
@@ -68,7 +66,6 @@ export const handleGoogleAuthCallback = async (
     const userEmail: string = googlePayload.email;
     const googleUserId: string = googlePayload.sub; // Google's unique ID for the user
     const userName: string = googlePayload.name || userEmail.split('@')[0];
-
 
     const tokenRepository: Repository<TokenEntity> =
       dataSource.getRepository(TokenEntity);

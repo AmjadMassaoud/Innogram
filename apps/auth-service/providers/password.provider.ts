@@ -1,8 +1,11 @@
 import { Request, Response } from 'express';
 import { TokenEntity } from '../entities/token-entity';
+import { PasswordResetTokenEntity } from '../entities/password-reset-token.entity';
 import dataSource from '../configs/orm.config';
 import * as crypto from 'crypto';
+import httpStatus from 'http-status';
 import * as bcrypt from 'bcrypt';
+import { passwordResetSchema } from '../schema-validations/password.validation';
 
 // Request password reset: generates a reset token and sets expiresAt
 export const requestTokenReset = async (req: Request, res: Response) => {
@@ -11,8 +14,11 @@ export const requestTokenReset = async (req: Request, res: Response) => {
   if (!email) return res.status(400).json({ message: 'Email is required' });
 
   const tokenRepo = dataSource.getRepository(TokenEntity);
+  const userPasswordResetTokenRepo = dataSource.getRepository(
+    PasswordResetTokenEntity,
+  );
 
-  const user = await tokenRepo.findOne({ where: { userEmail: email } });
+  const user = await tokenRepo.findOneBy({ userEmail: email });
 
   if (!user) return res.status(404).json({ message: 'User not found' });
 
@@ -22,47 +28,89 @@ export const requestTokenReset = async (req: Request, res: Response) => {
     .update(resetToken)
     .digest('hex');
 
-  user.refreshToken = hashedToken;
+  const tokenAlreadyissued = await userPasswordResetTokenRepo.findOneBy({
+    userEmail: user.userEmail,
+  });
 
-  user.expiresAt = new Date(Date.now() + 1000 * 60 * 60); // 1 hour
+  if (tokenAlreadyissued) {
+    return res
+      .status(httpStatus.ALREADY_REPORTED)
+      .json({ message: 'Reset Token is already issued' });
+  }
 
-  await tokenRepo.save(user);
+  try {
+    const userPassResetTokenRecord = userPasswordResetTokenRepo.create({
+      userEmail: user.userEmail,
+      hashedToken: hashedToken,
+      expiresAt: new Date(Date.now() + 1000 * 60 * 15),
+    });
 
-  // In production, send resetToken via email. For now, return it.
+    if (userPassResetTokenRecord) {
+      await userPasswordResetTokenRepo.save(userPassResetTokenRecord);
+    }
+  } catch {
+    throw new Error('Could not save user password reset token!');
+  }
+
+  // to be handled by API-GATEWAY
   return res.json({ message: 'Password reset token generated', resetToken });
 };
 
 // Reset password: verifies token and updates password
 export const resetUserPassword = async (req: Request, res: Response) => {
-  const { email, token, newPassword } = req.body;
+  // const { email, token, newPassword } = req.body;
 
-  if (!email || !token || !newPassword) {
+  const { error, value } = passwordResetSchema.validate(req.body);
+
+  if (error) {
+    res.status(httpStatus.BAD_REQUEST).json({
+      error: error.details[0].message,
+    });
+    return;
+  }
+
+  const { email, resetToken, newPassword } = value;
+
+  if (!email || !resetToken || !newPassword) {
     return res.status(400).json({ message: 'Missing fields' });
   }
 
   const tokenRepo = dataSource.getRepository(TokenEntity);
+  const userPasswordResetTokenRepo = dataSource.getRepository(
+    PasswordResetTokenEntity,
+  );
 
-  const user = await tokenRepo.findOne({ where: { userEmail: email } });
+  const hashedToken = crypto
+    .createHash('sha256')
+    .update(resetToken)
+    .digest('hex');
 
-  if (!user || !user.refreshToken || !user.expiresAt) {
-    return res.status(400).json({ message: 'Invalid request' });
+  const userPassTokenRecord = await userPasswordResetTokenRepo.findOneBy({
+    userEmail: email,
+    hashedToken: hashedToken,
+  });
+
+  if (!userPassTokenRecord) {
+    return res.status(400).json({ message: 'User/token does not exist' });
   }
 
-  if (user.expiresAt < new Date()) {
+  if (userPassTokenRecord.expiresAt < new Date()) {
     return res.status(400).json({ message: 'Token expired' });
   }
 
-  const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+  const hashedUserPass = await bcrypt.hash(newPassword, 10);
 
-  if (user.refreshToken !== hashedToken) {
-    return res.status(400).json({ message: 'Invalid token' });
+  const isUpdated = await tokenRepo.update(
+    { userEmail: email },
+    { userPassword: hashedUserPass },
+  );
+
+  if (isUpdated) {
+    await userPasswordResetTokenRepo.delete({
+      userEmail: email,
+      hashedToken: hashedToken,
+    });
   }
 
-  user.userPassword = await bcrypt.hash(newPassword, 10);
-  user.refreshToken = '';
-  user.expiresAt = new Date();
-
-  await tokenRepo.save(user);
-
-  return res.json({ message: 'Password has been reset' });
+  return res.status(200).json({ message: 'Password has been reset' });
 };
