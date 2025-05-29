@@ -48,11 +48,11 @@ POST /innogram/password/reset         # Reset password with token
 ## Environment Variables
 
 ```env
-NODE_ENV=development
+NODE_ENV=
 PORT=4000
-SERVER_URL=http://localhost:3001
+SERVER_URL=
 INTERNAL_API_SECRET=your_internal_api_secret
-CORS_ORIGIN=*
+CORS_ORIGIN=
 
 # JWT Configuration
 ACCESS_TOKEN_SECRET=your_access_token_secret
@@ -62,7 +62,7 @@ REFRESH_TOKEN_EXPIRE=1d
 REFRESH_TOKEN_COOKIE_NAME=jid
 
 # Database Configuration
-MONGODB_URI=mongodb://localhost:27017
+MONGODB_URI=
 REDIS_HOST=localhost
 REDIS_PORT=6379
 REDIS_PASSWORD=
@@ -70,7 +70,7 @@ REDIS_PASSWORD=
 # Google OAuth Configuration
 GOOGLE_CLIENT_ID=your_google_client_id
 GOOGLE_CLIENT_SECRET=your_google_client_secret
-GOOGLE_CALLBACK_URL=http://localhost:4000/innogram/auth/google-callback
+GOOGLE_CALLBACK_URL=
 ```
 
 ## API Usage Examples
