@@ -208,8 +208,6 @@ export async function handleRefreshToken(
 export async function handleVerifyAccessToken(req: Request, res: Response) {
   const token = req.body.accessToken;
 
-  console.log('req body ->', req.body);
-
   if (!token) {
     return res.status(httpStatus.BAD_REQUEST).json({
       isValid: false,

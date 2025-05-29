@@ -64,7 +64,6 @@ export const requestTokenReset = async (req: Request, res: Response) => {
       attemptsRemaining: MAX_ATTEMPTS - attempts,
     });
   } catch (error) {
-    console.error('Password reset error:', error);
     return res
       .status(500)
       .json({ message: 'Could not process password reset request' });
