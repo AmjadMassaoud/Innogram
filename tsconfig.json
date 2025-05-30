@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "strict": true,
-    "module": "commonjs",
+    "module": "ES2022",
     "declaration": false,
     "removeComments": true,
     "emitDecoratorMetadata": true,
@@ -19,7 +19,9 @@
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
     "paths": {
-      "@app/config-lib": ["libs/config-lib/src/index.ts"]
+      "@app/config-lib": ["libs/config-lib/src/index.ts"],
+      "@app/entities-lib": ["libs/entities-lib/src"],
+      "@app/entities-lib/*": ["libs/entities-lib/src/*"]
     }
   }
 }
