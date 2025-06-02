@@ -19,42 +19,6 @@
         "tsConfigPath": "apps/api-gateway/tsconfig.app.json"
       }
     },
-    "notifications-service": {
-      "type": "application",
-      "root": "apps/notifications-service",
-      "entryFile": "main",
-      "sourceRoot": "apps/notifications-service/src",
-      "compilerOptions": {
-        "tsConfigPath": "apps/notifications-service/tsconfig.app.json"
-      }
-    },
-    "posts-service": {
-      "type": "application",
-      "root": "apps/posts-service",
-      "entryFile": "main",
-      "sourceRoot": "apps/posts-service/src",
-      "compilerOptions": {
-        "tsConfigPath": "apps/posts-service/tsconfig.app.json"
-      }
-    },
-    "user-service": {
-      "type": "application",
-      "root": "apps/user-service",
-      "entryFile": "main",
-      "sourceRoot": "apps/user-service/src",
-      "compilerOptions": {
-        "tsConfigPath": "apps/user-service/tsconfig.app.json"
-      }
-    },
-    "chats-service": {
-      "type": "application",
-      "root": "apps/chats-service",
-      "entryFile": "main",
-      "sourceRoot": "apps/chats-service/src",
-      "compilerOptions": {
-        "tsConfigPath": "apps/chats-service/tsconfig.app.json"
-      }
-    },
     "config-lib": {
       "type": "library",
       "root": "libs/config-lib",
