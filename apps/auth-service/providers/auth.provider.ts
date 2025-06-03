@@ -17,10 +17,10 @@ import {
   signupSchema,
   loginSchema,
 } from '../schema-validations/auth.validation';
-import { TokenEntity } from '../entities/token-entity';
+import { UserAuthEntity } from '../entities/user-auth-entity';
 import config from '../configs/config';
 
-const TokenRepository = dataSource.getRepository(TokenEntity);
+const TokenRepository = dataSource.getRepository(UserAuthEntity);
 
 export async function handleSignUp(req: Request, res: Response): Promise<void> {
   try {
