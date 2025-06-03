@@ -26,7 +26,7 @@ authController.post('/refresh-token', (req, res, next) => {
   handleRefreshToken(req, res).catch(next);
 });
 
-authController.post('/validate-accessToken', (req, res, next) => {
+authController.post('/validate-access-token', (req, res, next) => {
   handleVerifyAccessToken(req, res).catch(next);
 });
 
