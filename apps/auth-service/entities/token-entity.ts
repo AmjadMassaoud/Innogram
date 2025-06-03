@@ -7,8 +7,8 @@ import {
   ObjectId,
 } from 'typeorm';
 
-@Entity('tokens')
-export class TokenEntity {
+@Entity('user-auth-entity')
+export class UserAuthEntity {
   @ObjectIdColumn()
   id!: ObjectId;
 
