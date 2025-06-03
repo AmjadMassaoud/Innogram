@@ -7,6 +7,8 @@ import {
   ObjectId,
 } from 'typeorm';
 
+import { RegistrationMethod } from '../enums/registration-method';
+
 @Entity('user-auth-entity')
 export class UserAuthEntity {
   @ObjectIdColumn()
@@ -31,7 +33,7 @@ export class UserAuthEntity {
   googleUserId!: string;
 
   @Column({ type: 'string' })
-  registrationMethod!: 'innogram' | 'google';
+  registrationMethod!: RegistrationMethod;
 
   @CreateDateColumn()
   createdAt!: Date;
