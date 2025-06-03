@@ -6,7 +6,7 @@ import {
   Index,
 } from 'typeorm';
 
-@Entity('password_reset_tokens')
+@Entity('password-reset-tokens')
 export class PasswordResetTokenEntity {
   @ObjectIdColumn()
   id!: string;
