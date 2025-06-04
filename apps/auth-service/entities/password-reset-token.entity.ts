@@ -6,14 +6,14 @@ import {
   Index,
 } from 'typeorm';
 
-@Entity('password_reset_tokens')
+@Entity('password-reset-tokens')
 export class PasswordResetTokenEntity {
   @ObjectIdColumn()
   id!: string;
 
   @Index()
   @Column({ unique: true })
-  userEmail!: string;
+  email!: string;
 
   @Column({ unique: true })
   hashedToken!: string;

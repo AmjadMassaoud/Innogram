@@ -1,9 +1,11 @@
 import jwt from 'jsonwebtoken';
 import config from '../configs/config';
-import { TokenEntity } from '../entities/token-entity';
+import { UserAuthEntity } from '../entities/user-auth.entity';
 import dataSource from '../configs/orm.config';
+import { AuthenticationError } from '../custom-errors/auth.errors';
+import httpStatus from 'http-status';
 
-const tokenRepository = dataSource.getRepository(TokenEntity);
+const userAuthRepo = dataSource.getRepository(UserAuthEntity);
 
 interface TokenPayload {
   userId: string;
@@ -25,11 +27,9 @@ export async function generateRefreshToken(
     expiresIn: config.jwt.refresh_token.expire,
   });
 
-  // Store refresh token in database
-
-  await tokenRepository.update(
+  await userAuthRepo.update(
     {
-      userEmail: payload.email,
+      email: payload.email,
     },
     {
       refreshToken: refreshToken,
@@ -53,8 +53,8 @@ export async function verifyRefreshToken(
     config.jwt.refresh_token.secret,
   ) as TokenPayload;
 
-  const storedToken = await tokenRepository.findOne({
-    where: { refreshToken, userEmail: payload.email },
+  const storedToken = await userAuthRepo.findOne({
+    where: { refreshToken, email: payload.email },
   });
 
   if (!storedToken) {
@@ -67,5 +67,15 @@ export async function verifyRefreshToken(
 export async function invalidateRefreshToken(
   refreshToken: string,
 ): Promise<void> {
-  await tokenRepository.delete({ refreshToken });
+  try {
+    await userAuthRepo.update(
+      { refreshToken: refreshToken },
+      { refreshToken: null },
+    );
+  } catch {
+    throw new AuthenticationError(
+      'Could not invalidate refreshToken',
+      httpStatus.INTERNAL_SERVER_ERROR,
+    );
+  }
 }

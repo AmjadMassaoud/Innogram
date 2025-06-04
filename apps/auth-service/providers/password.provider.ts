@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { TokenEntity } from '../entities/token-entity';
+import { UserAuthEntity } from '../entities/user-auth.entity';
 import { PasswordResetTokenEntity } from '../entities/password-reset-token.entity';
 import dataSource from '../configs/orm.config';
 import * as crypto from 'crypto';
@@ -34,8 +34,8 @@ export const requestTokenReset = async (req: Request, res: Response) => {
       });
     }
 
-    const tokenRepo = dataSource.getRepository(TokenEntity);
-    const user = await tokenRepo.findOneBy({ userEmail: email });
+    const tokenRepo = dataSource.getRepository(UserAuthEntity);
+    const user = await tokenRepo.findOneBy({ email: email });
 
     if (!user) return res.status(404).json({ message: 'User not found' });
 
@@ -51,7 +51,7 @@ export const requestTokenReset = async (req: Request, res: Response) => {
       PasswordResetTokenEntity,
     );
     const userPassResetTokenRecord = userPasswordResetTokenRepo.create({
-      userEmail: user.userEmail,
+      email: user.email,
       hashedToken: hashedToken,
       expiresAt: new Date(Date.now() + 1000 * 60 * 15),
     });
@@ -89,7 +89,7 @@ export const resetUserPassword = async (req: Request, res: Response) => {
     return res.status(400).json({ message: 'Missing fields' });
   }
 
-  const tokenRepo = dataSource.getRepository(TokenEntity);
+  const tokenRepo = dataSource.getRepository(UserAuthEntity);
   const userPasswordResetTokenRepo = dataSource.getRepository(
     PasswordResetTokenEntity,
   );
@@ -100,7 +100,7 @@ export const resetUserPassword = async (req: Request, res: Response) => {
     .digest('hex');
 
   const userPassTokenRecord = await userPasswordResetTokenRepo.findOneBy({
-    userEmail: email,
+    email: email,
     hashedToken: hashedToken,
   });
 
@@ -115,13 +115,13 @@ export const resetUserPassword = async (req: Request, res: Response) => {
   const hashedUserPass = await bcrypt.hash(newPassword, 10);
 
   const isUpdated = await tokenRepo.update(
-    { userEmail: email },
-    { userPassword: hashedUserPass },
+    { email: email },
+    { password: hashedUserPass },
   );
 
   if (isUpdated) {
     await userPasswordResetTokenRepo.delete({
-      userEmail: email,
+      email: email,
       hashedToken: hashedToken,
     });
   }

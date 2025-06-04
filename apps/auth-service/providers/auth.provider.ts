@@ -1,11 +1,4 @@
-import type { Request, Response } from 'express';
-import jwt, {
-  type JwtPayload,
-  TokenExpiredError,
-  JsonWebTokenError,
-} from 'jsonwebtoken';
 import httpStatus from 'http-status';
-import * as bcrypt from 'bcrypt';
 import dataSource from '../configs/orm.config';
 import {
   generateAccessToken,
@@ -13,176 +6,151 @@ import {
   verifyRefreshToken,
   invalidateRefreshToken,
 } from '../utils/token.util';
+
+import { UserAuthEntity } from '../entities/user-auth.entity';
+import { hashPassword, verifyPassword } from '../utils/password.util'; // Adjust path if needed
 import {
-  signupSchema,
-  loginSchema,
-} from '../schema-validations/auth.validation';
-import { TokenEntity } from '../entities/token-entity';
-import config from '../configs/config';
+  AuthenticationError,
+  InvalidCredentialsError,
+  NoTokenProvidedError,
+  UserAlreadyExistsError,
+  UserNotFoundError,
+} from '../custom-errors/auth.errors';
+import {
+  LoginReturnType,
+  LoginValueParam,
+  signupReturnType,
+  SignupValueParam,
+} from '../interfaces/auth-provider-interfaces/login-value.interface';
+import { RefreshTokenReturnTtype } from '../interfaces/auth-provider-interfaces/token.interface';
 
-const TokenRepository = dataSource.getRepository(TokenEntity);
+const UserAuthRepo = dataSource.getRepository(UserAuthEntity);
 
-export async function handleSignUp(req: Request, res: Response): Promise<void> {
+export async function handleSignUp(
+  value: SignupValueParam,
+): Promise<signupReturnType> {
   try {
-    // Validate request body
-    const { error, value } = signupSchema.validate(req.body);
-    if (error) {
-      res.status(httpStatus.BAD_REQUEST).json({
-        error: error.details[0].message,
-      });
-      return;
-    }
-
     const { email, password, username } = value;
 
     // Check if user already exists
-    const existingUser = await TokenRepository.findOne({
-      where: { userEmail: email },
-    });
-
-    if (existingUser) {
-      res.status(httpStatus.CONFLICT).json({ error: 'User already exists' });
-      return;
+    const userExists = await UserAuthRepo.findOneBy({ email });
+    if (userExists) {
+      throw new UserAlreadyExistsError();
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await hashPassword(password);
 
-    // Create new user
-    const user = await TokenRepository.save({
-      userEmail: email,
-      userPassword: hashedPassword,
+    const user = await UserAuthRepo.save({
+      email: email,
+      password: hashedPassword,
       username,
     });
 
     const tokenPayload = {
       userId: user.id.toHexString(),
-      email: user.userEmail,
+      email: user.email,
     };
+
     const accessToken = await generateAccessToken(tokenPayload);
     const refreshToken = await generateRefreshToken(tokenPayload);
 
-    // Set refresh token in HTTP-only cookie
-    res.cookie('jid', refreshToken, {
-      httpOnly: true,
-      path: '/innogram/auth',
-      sameSite: 'lax',
-      secure: config.node_env === 'production',
-    });
-
-    res.status(httpStatus.CREATED).json({
-      accessToken,
+    return {
       refreshToken,
+      accessToken,
       user: {
         id: user.id.toHexString(),
-        email: user.userEmail,
+        email: user.email,
         username: user.username,
       },
-    });
+    };
   } catch (error) {
-    res
-      .status(httpStatus.INTERNAL_SERVER_ERROR)
-      .json({ error: 'Internal server error' });
+    if (error instanceof InvalidCredentialsError) {
+      throw new AuthenticationError(error.message, httpStatus.UNAUTHORIZED);
+    }
+
+    throw new AuthenticationError(
+      'An internal server error occurred during login.',
+      httpStatus.INTERNAL_SERVER_ERROR,
+    );
   }
 }
 
-export async function handleLogin(req: Request, res: Response): Promise<void> {
+export async function handleLogin(
+  value: LoginValueParam,
+): Promise<LoginReturnType> {
   try {
-    // Validate request body
-    const { error, value } = loginSchema.validate(req.body);
-    if (error) {
-      res.status(httpStatus.BAD_REQUEST).json({
-        error: error.details[0].message,
-      });
-      return;
-    }
-
     const { email, password } = value;
 
-    // Find user
-    const user = await TokenRepository.findOne({
-      where: { userEmail: email },
-    });
+    const user = await UserAuthRepo.findOneBy({ email: email });
 
     if (!user) {
-      res
-        .status(httpStatus.UNAUTHORIZED)
-        .json({ error: 'Invalid credentials' });
-      return;
+      throw new UserNotFoundError('User not found');
     }
 
-    // Verify password
-    const validPassword = await bcrypt.compare(password, user.userPassword);
+    const validPassword = await verifyPassword(password, user.password);
+
     if (!validPassword) {
-      res
-        .status(httpStatus.UNAUTHORIZED)
-        .json({ error: 'Invalid credentials' });
-      return;
+      throw new InvalidCredentialsError('Invalid password');
     }
 
     const tokenPayload = {
       userId: user.id.toHexString(),
-      email: user.userEmail,
+      email: user.email,
     };
+
     const accessToken = await generateAccessToken(tokenPayload);
     const refreshToken = await generateRefreshToken(tokenPayload);
 
-    // update user's refreshToken
-    await TokenRepository.update(
-      { userEmail: email },
+    await UserAuthRepo.update(
+      { email: email },
       {
         refreshToken: refreshToken,
       },
     );
 
-    // Set refresh token in HTTP-only cookie
-    res.cookie('jid', refreshToken, {
-      httpOnly: true,
-      path: '/innogram/auth',
-      sameSite: 'lax',
-      secure: config.node_env === 'production',
-    });
-
-    res.json({
+    return {
+      refreshToken,
       accessToken,
       user: {
         id: user.id.toHexString(),
-        email: user.userEmail,
+        email: user.email,
         username: user.username,
       },
-    });
+    };
   } catch (error) {
-    res
-      .status(httpStatus.INTERNAL_SERVER_ERROR)
-      .json({ error: 'Internal server error!!' });
+    if (error instanceof UserNotFoundError) {
+      throw new AuthenticationError(error.message, httpStatus.NOT_FOUND);
+    }
+
+    if (error instanceof InvalidCredentialsError) {
+      throw new AuthenticationError(error.message, httpStatus.UNAUTHORIZED);
+    }
+
+    // For all other unexpected errors
+    throw new AuthenticationError(
+      'An internal server error occurred during login.',
+      httpStatus.INTERNAL_SERVER_ERROR,
+    );
   }
 }
 
 export async function handleRefreshToken(
-  req: Request,
-  res: Response,
-): Promise<void> {
+  token: string,
+): Promise<RefreshTokenReturnTtype> {
   try {
-    const token = req.cookies.jid;
-    if (!token) {
-      res.status(httpStatus.UNAUTHORIZED).json({ error: 'No refresh token' });
-      return;
-    }
-
     const payload = await verifyRefreshToken(token);
 
-    const user = await TokenRepository.findOne({
-      where: { userEmail: payload.email },
+    const user = await UserAuthRepo.findOne({
+      where: { email: payload.email },
     });
 
     if (!user) {
-      res.status(httpStatus.UNAUTHORIZED).json({ error: 'User not found' });
-      return;
+      throw new UserNotFoundError('User not found');
     }
 
     const tokenPayload = {
       userId: user.id.toHexString(),
-      email: user.userEmail,
+      email: user.email,
     };
 
     const accessToken = await generateAccessToken(tokenPayload);
@@ -190,83 +158,26 @@ export async function handleRefreshToken(
 
     await invalidateRefreshToken(token);
 
-    res.cookie('jid', refreshToken, {
-      httpOnly: true,
-      path: '/innogram/auth',
-      sameSite: 'lax',
-      secure: config.node_env === 'production',
-    });
-
-    res.json({ accessToken });
+    return { refreshToken, accessToken };
   } catch (error) {
-    res
-      .status(httpStatus.UNAUTHORIZED)
-      .json({ error: 'Invalid refresh token' });
+    if (error instanceof NoTokenProvidedError) {
+      throw new NoTokenProvidedError();
+    }
+
+    throw new AuthenticationError(
+      'An internal server error occurred during login.',
+      httpStatus.INTERNAL_SERVER_ERROR,
+    );
   }
 }
 
-export async function handleVerifyAccessToken(req: Request, res: Response) {
-  const token = req.body.accessToken;
-
-  if (!token) {
-    return res.status(httpStatus.BAD_REQUEST).json({
-      isValid: false,
-      message: 'Access token is required.',
-    });
-  }
-
+export async function handleLogout(token: string): Promise<void> {
   try {
-    const decoded = jwt.verify(
-      token,
-      config.jwt.access_token.secret,
-    ) as JwtPayload;
-
-    // Token is valid, send back the decoded payload (or just a success status)
-    // The payload typically contains userId, email, roles, etc.
-    return res.status(httpStatus.OK).json({
-      isValid: true,
-      message: 'Access token is valid.',
-      user: decoded, // Send the decoded payload which contains user info
-    });
+    await invalidateRefreshToken(token);
   } catch (error) {
-    if (error instanceof TokenExpiredError) {
-      return res.status(httpStatus.UNAUTHORIZED).json({
-        isValid: false,
-        message: 'Access token has expired.',
-        error: 'TokenExpiredError',
-      });
-    }
-
-    if (error instanceof JsonWebTokenError) {
-      return res.status(httpStatus.UNAUTHORIZED).json({
-        isValid: false,
-        message: 'Access token is invalid.',
-        error: 'JsonWebTokenError',
-      });
-    }
-
-    return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
-      isValid: false,
-      message: 'An error occurred during token verification.',
-    });
-  }
-}
-
-export async function handleLogout(req: Request, res: Response): Promise<void> {
-  try {
-    const token = req.cookies.jid;
-    if (token) {
-      await invalidateRefreshToken(token);
-    }
-
-    res.clearCookie('jid', {
-      path: '/innogram/auth',
-    });
-
-    res.status(httpStatus.OK).json({ message: 'Logged out successfully' });
-  } catch (error) {
-    res
-      .status(httpStatus.INTERNAL_SERVER_ERROR)
-      .json({ error: 'Internal server error' });
+    throw new AuthenticationError(
+      'Logout failed',
+      httpStatus.INTERNAL_SERVER_ERROR,
+    );
   }
 }

@@ -1,5 +1,6 @@
-import type { Request, Response, NextFunction } from 'express';
+import type { Request, NextFunction } from 'express';
 import config from '../configs/config';
+import { InternalApiSecretError } from '../custom-errors/verify-internal-api-secret.error';
 
 const verifyInternalReq = (req: Request, res: any, next: NextFunction) => {
   const internalApiSecret = req.headers['x-internal-api-secret'];
@@ -8,9 +9,7 @@ const verifyInternalReq = (req: Request, res: any, next: NextFunction) => {
     !internalApiSecret ||
     internalApiSecret !== config.internalApiSecret.internal_api_secret
   ) {
-    return res
-      .status(403)
-      .json({ error: 'Unauthorized: Invalid internal API secret' });
+    throw new InternalApiSecretError();
   }
 
   next();

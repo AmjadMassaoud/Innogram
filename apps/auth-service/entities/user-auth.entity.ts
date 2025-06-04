@@ -6,9 +6,11 @@ import {
   UpdateDateColumn,
   ObjectId,
 } from 'typeorm';
+import { RegistrationMethodEnum } from '../enums/registration-method.enum';
+import { refreshTokenType } from '../types/refresh-token.type';
 
-@Entity('tokens')
-export class TokenEntity {
+@Entity('user-auth')
+export class UserAuthEntity {
   @ObjectIdColumn()
   id!: ObjectId;
 
@@ -16,13 +18,13 @@ export class TokenEntity {
   username!: string;
 
   @Column({ type: 'string', unique: true })
-  userEmail!: string;
+  email!: string;
 
   @Column({ type: 'string' })
-  userPassword!: string;
+  password!: string;
 
-  @Column({ type: 'string' })
-  refreshToken!: string;
+  @Column({ type: 'string', nullable: true })
+  refreshToken!: refreshTokenType;
 
   @Column({ type: 'string' })
   type!: string;
@@ -30,8 +32,8 @@ export class TokenEntity {
   @Column({ type: 'string', nullable: true })
   googleUserId!: string;
 
-  @Column({ type: 'string' })
-  registrationMethod!: 'innogram' | 'google';
+  @Column({ type: 'string', default: RegistrationMethodEnum.EMAIL })
+  registrationMethod!: RegistrationMethodEnum;
 
   @CreateDateColumn()
   createdAt!: Date;

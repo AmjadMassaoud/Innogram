@@ -1,7 +1,7 @@
 import express from 'express';
 import authController from './controllers/auth.controller';
 import passwordRouter from './controllers/password.controller';
-import { corsErrorHandler, corsMiddleware } from './configs/cors.config';
+import { corsErrorHandler } from './configs/cors.config';
 import cors from 'cors';
 import dataSource from './configs/orm.config';
 import cookieParser from 'cookie-parser';

@@ -1,8 +1,7 @@
-import { type CorsOptions } from 'cors';
 import config from './config';
 import type { NextFunction, Request, Response } from 'express';
 import httpStatus from 'http-status';
-import cors from 'cors';
+import { CorsOriginNotAllowedError } from '../custom-errors/cors-original-not-allowed.error';
 
 export function corsMiddleware(
   req: Request,
@@ -13,41 +12,40 @@ export function corsMiddleware(
 
   // If no origin, reject the request
   if (!origin) {
-    return res.status(403).json({ error: 'Origin header is required' });
+    return res
+      .status(httpStatus.FORBIDDEN)
+      .json({ error: 'Origin header is required' });
   }
 
-  // Check if origin matches allowed origin
   if (origin !== config.cors.cors_origin) {
-    return res.status(403).json({
-      error: 'CORS error: Origin not allowed',
-      allowedOrigin: config.cors.cors_origin,
-      receivedOrigin: origin,
-    });
+    return next(
+      new CorsOriginNotAllowedError(undefined, config.cors.cors_origin, origin),
+    );
   }
 
-  // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', config.cors.cors_origin);
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
 
-  // Handle preflight requests
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
   next();
 }
+
 export const corsErrorHandler = (
   err: Error,
   _: Request,
   res: Response,
   next: NextFunction,
 ) => {
-  if (err.message === 'Not allowed by CORS') {
+  if (err instanceof CorsOriginNotAllowedError) {
     res.status(httpStatus.FORBIDDEN).json({
-      error: 'Origin not allowed',
-      allowedOrigin: config.cors.cors_origin,
+      error: err.message,
+      allowedOrigin: err.allowedOrigin,
+      receivedOrigin: err.receivedOrigin, // If you added this to your custom error
     });
   } else {
     next(err);
