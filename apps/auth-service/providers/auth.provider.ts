@@ -88,7 +88,6 @@ export async function handleLogin(
     const user = await UserAuthRepo.findOneBy({ email: email });
 
     if (!user) {
-      console.log('why does not throw');
       throw new UserNotFoundError('User not found');
     }
 
@@ -184,9 +183,6 @@ export async function handleLogout(token: string): Promise<void> {
   try {
     await invalidateRefreshToken(token);
   } catch (error) {
-    throw new AuthenticationError(
-      'Logout failed',
-      httpStatus.INTERNAL_SERVER_ERROR,
-    );
+    throw error;
   }
 }
