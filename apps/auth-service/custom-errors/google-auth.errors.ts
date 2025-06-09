@@ -1,4 +1,4 @@
-import httpStatus from 'http-status'; // Import httpStatus for status hints
+import httpStatus from 'http-status';
 import { AuthenticationError } from './auth.errors';
 
 /**

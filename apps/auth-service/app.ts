@@ -3,22 +3,15 @@ import authController from './controllers/auth.controller';
 import passwordRouter from './controllers/password.controller';
 import { corsErrorHandler } from './configs/cors.config';
 import cors from 'cors';
-import dataSource from './configs/orm.config';
 import cookieParser from 'cookie-parser';
 import config from './configs/config';
 import verifyInternalReq from './middlewares/verify-internal-request';
+import swaggerUi from 'swagger-ui-express';
+import swaggerSpec from './swagger';
 
 const app = express();
 
-// Initialize database connection
-dataSource
-  .initialize()
-  .then(() => {
-    console.log('Data Source has been initialized!');
-  })
-  .catch((err) => {
-    console.error('Error during Data Source initialization:', err);
-  });
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -35,6 +28,7 @@ app.use(
     preflightContinue: false,
   }),
 );
+
 app.use(corsErrorHandler);
 app.use(verifyInternalReq);
 

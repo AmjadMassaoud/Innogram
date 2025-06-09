@@ -10,10 +10,8 @@ import {
 import { UserAuthEntity } from '../entities/user-auth.entity';
 import { hashPassword, verifyPassword } from '../utils/password.util'; // Adjust path if needed
 import {
-<<<<<<< HEAD
   AuthenticationError,
   InvalidCredentialsError,
-  NoTokenProvidedError,
   UserAlreadyExistsError,
   UserNotFoundError,
 } from '../custom-errors/auth.errors';
@@ -24,17 +22,9 @@ import {
   SignupValueParam,
 } from '../interfaces/auth-provider-interfaces/login-value.interface';
 import { RefreshTokenReturnTtype } from '../interfaces/auth-provider-interfaces/token.interface';
+import { NoTokenProvidedError } from '../custom-errors/token.errors';
 
 const UserAuthRepo = dataSource.getRepository(UserAuthEntity);
-=======
-  signupSchema,
-  loginSchema,
-} from '../schema-validations/auth.validation';
-import { UserAuthEntity } from '../entities/user-auth-entity';
-import config from '../configs/config';
-
-const TokenRepository = dataSource.getRepository(UserAuthEntity);
->>>>>>> 55140b987ae2e708d424a093247a94c0e97d960c
 
 export async function handleSignUp(
   value: SignupValueParam,

@@ -45,7 +45,7 @@ export const corsErrorHandler = (
     res.status(httpStatus.FORBIDDEN).json({
       error: err.message,
       allowedOrigin: err.allowedOrigin,
-      receivedOrigin: err.receivedOrigin, // If you added this to your custom error
+      receivedOrigin: err.receivedOrigin,
     });
   } else {
     next(err);

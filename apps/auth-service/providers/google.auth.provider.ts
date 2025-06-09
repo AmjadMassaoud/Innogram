@@ -1,4 +1,3 @@
-import { Request, Response } from 'express';
 import httpStatus from 'http-status';
 import {
   OAuth2Client,
@@ -24,19 +23,6 @@ const oAuth2Client = new OAuth2Client(
   config.google.clientSecret,
   config.google.callbackUrl,
 );
-
-export function initGoogle(req: Request, res: Response): void {
-  const authorizeUrl = oAuth2Client.generateAuthUrl({
-    access_type: 'offline',
-    prompt: 'consent',
-    scope: [
-      'https://www.googleapis.com/auth/userinfo.email',
-      'https://www.googleapis.com/auth/userinfo.profile',
-    ],
-  });
-
-  res.redirect(authorizeUrl);
-}
 
 // Handles the callback from Google after user authentication.
 export const handleGoogleAuthCallback = async (

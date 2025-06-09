@@ -37,17 +37,6 @@ export class UserNotFoundError extends AuthenticationError {
 }
 
 /**
- * Error thrown when a logout attempt is made without a valid token.
- */
-export class NoTokenProvidedError extends AuthenticationError {
-  constructor(message: string = 'No token provided') {
-    super(message, 400);
-    this.name = 'NoTokenProvidedError';
-    Object.setPrototypeOf(this, NoTokenProvidedError.prototype);
-  }
-}
-
-/**
  * Error thrown when attempting to create a user that already exists.
  */
 export class UserAlreadyExistsError extends AuthenticationError {

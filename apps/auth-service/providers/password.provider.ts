@@ -1,43 +1,57 @@
-import { Request, Response } from 'express';
 import { UserAuthEntity } from '../entities/user-auth.entity';
 import { PasswordResetTokenEntity } from '../entities/password-reset-token.entity';
 import dataSource from '../configs/orm.config';
 import * as crypto from 'crypto';
 import httpStatus from 'http-status';
-import * as bcrypt from 'bcrypt';
-import { passwordResetSchema } from '../schema-validations/password.validation';
 import {
   setResetToken,
   getResetToken,
   incrementResetAttempts,
   MAX_ATTEMPTS,
 } from '../utils/redis.util';
+import { hashPassword } from '../utils/password.util';
+import {
+  RequestTokenResetReturnType,
+  ResetUserPasswordValueParam,
+} from '../interfaces/password-provider-interfaces/password-provider.interface';
+import {
+  PasswordResetRequestError,
+  ResetTokenAlreadyExistsError,
+  TooManyRequestsError,
+} from '../custom-errors/password.errors';
+import { UserNotFoundError } from '../custom-errors/auth.errors';
+import {
+  NoTokenProvidedError,
+  TokenExpiredError,
+} from '../custom-errors/token.errors';
+
 // Request password reset: generates a reset token and sets expiresAt
-export const requestTokenReset = async (req: Request, res: Response) => {
-  const { email } = req.body;
-
-  if (!email) return res.status(400).json({ message: 'Email is required' });
-
+export const requestTokenReset = async (
+  email: string,
+): Promise<RequestTokenResetReturnType> => {
   try {
     const attempts = await incrementResetAttempts(email);
     if (attempts > MAX_ATTEMPTS) {
-      return res.status(httpStatus.TOO_MANY_REQUESTS).json({
-        message: 'Too many reset attempts. Please try again in 1 hour.',
-      });
+      throw new TooManyRequestsError(
+        'Too many reset attempts. Please try again in 1 hour.',
+        httpStatus.TOO_MANY_REQUESTS,
+      );
     }
 
     const existingToken = await getResetToken(email);
     if (existingToken) {
-      return res.status(httpStatus.ALREADY_REPORTED).json({
-        message: 'Reset Token is already issued',
-        resetToken: existingToken,
-      });
+      throw new ResetTokenAlreadyExistsError(
+        'A password reset token has already been issued for this email. Please check your email or try again later.',
+        httpStatus.CONFLICT,
+      );
     }
 
-    const tokenRepo = dataSource.getRepository(UserAuthEntity);
-    const user = await tokenRepo.findOneBy({ email: email });
+    const userAuthRepo = dataSource.getRepository(UserAuthEntity);
+    const user = await userAuthRepo.findOneBy({ email: email });
 
-    if (!user) return res.status(404).json({ message: 'User not found' });
+    if (!user) {
+      throw new UserNotFoundError('User not found');
+    }
 
     const resetToken = crypto.randomBytes(32).toString('hex');
     const hashedToken = crypto
@@ -58,73 +72,74 @@ export const requestTokenReset = async (req: Request, res: Response) => {
 
     await userPasswordResetTokenRepo.save(userPassResetTokenRecord);
 
-    return res.json({
+    return {
       message: 'Password reset token generated',
       hashedToken,
       attemptsRemaining: MAX_ATTEMPTS - attempts,
-    });
+    };
   } catch (error) {
-    return res
-      .status(500)
-      .json({ message: 'Could not process password reset request' });
+    throw new PasswordResetRequestError(
+      'Could not process password reset request due to an internal error.',
+      httpStatus.INTERNAL_SERVER_ERROR,
+    );
   }
 };
 
 // Reset password: verifies token and updates password
-export const resetUserPassword = async (req: Request, res: Response) => {
-  // const { email, token, newPassword } = req.body;
-
-  const { error, value } = passwordResetSchema.validate(req.body);
-
-  if (error) {
-    res.status(httpStatus.BAD_REQUEST).json({
-      error: error.details[0].message,
-    });
-    return;
-  }
-
+export const resetUserPassword = async (
+  value: ResetUserPasswordValueParam,
+): Promise<string> => {
   const { email, resetToken, newPassword } = value;
 
-  if (!email || !resetToken || !newPassword) {
-    return res.status(400).json({ message: 'Missing fields' });
-  }
+  try {
+    const userAuthRepo = dataSource.getRepository(UserAuthEntity);
 
-  const tokenRepo = dataSource.getRepository(UserAuthEntity);
-  const userPasswordResetTokenRepo = dataSource.getRepository(
-    PasswordResetTokenEntity,
-  );
+    const userPasswordResetTokenRepo = dataSource.getRepository(
+      PasswordResetTokenEntity,
+    );
 
-  const hashedToken = crypto
-    .createHash('sha256')
-    .update(resetToken)
-    .digest('hex');
+    const hashedToken = crypto
+      .createHash('sha256')
+      .update(resetToken)
+      .digest('hex');
 
-  const userPassTokenRecord = await userPasswordResetTokenRepo.findOneBy({
-    email: email,
-    hashedToken: hashedToken,
-  });
-
-  if (!userPassTokenRecord) {
-    return res.status(400).json({ message: 'User/token does not exist' });
-  }
-
-  if (userPassTokenRecord.expiresAt < new Date()) {
-    return res.status(400).json({ message: 'Token expired' });
-  }
-
-  const hashedUserPass = await bcrypt.hash(newPassword, 10);
-
-  const isUpdated = await tokenRepo.update(
-    { email: email },
-    { password: hashedUserPass },
-  );
-
-  if (isUpdated) {
-    await userPasswordResetTokenRepo.delete({
+    const userPassTokenRecord = await userPasswordResetTokenRepo.findOneBy({
       email: email,
       hashedToken: hashedToken,
     });
-  }
 
-  return res.status(200).json({ message: 'Password has been reset' });
+    if (!userPassTokenRecord) {
+      throw new NoTokenProvidedError();
+    }
+
+    if (userPassTokenRecord.expiresAt < new Date()) {
+      throw new TokenExpiredError();
+    }
+
+    const hashedPassword = await hashPassword(newPassword);
+
+    const user = await userAuthRepo.findOneBy({ email: email });
+
+    if (!user) {
+      throw new UserNotFoundError();
+    }
+
+    const isUpdated = await userAuthRepo.update(
+      { email: email },
+      { password: hashedPassword },
+    );
+
+    if (isUpdated.affected) {
+      await userPasswordResetTokenRepo.delete({
+        email: email,
+        hashedToken: hashedToken,
+      });
+
+      return 'Password reset successful';
+    } else {
+      throw new PasswordResetRequestError();
+    }
+  } catch (error) {
+    throw new Error('An internal server error occurred during password reset.');
+  }
 };

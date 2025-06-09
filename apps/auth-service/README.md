@@ -1,198 +1,107 @@
-/# Auth Service
+# Auth Service
 
-Authentication microservice for Innogram application, handling user authentication, authorization, token management, and OAuth integration.
+Authentication microservice for the Innogram application, responsible for user authentication, authorization, token management, and OAuth integration.
 
 ## Features
 
-- JWT-based authentication with access and refresh tokens
+- JWT-based authentication (access & refresh tokens)
 - Google OAuth 2.0 integration
-- Password reset functionality with token-based verification
+- Password reset with token-based verification
 - MongoDB for user and token storage
 - Secure cookie-based refresh token handling
-- Internal API secret validation
+- Redis for token management (reset tokens, blacklisting, etc.)
+- Internal API secret validation for all endpoints
 
 ## Tech Stack
 
-- Node.js with Express.js
-- TypeORM with MongoDB
-- JWT for token management
+- Node.js (Express.js)
+- TypeORM (MongoDB)
+- JWT
 - Google OAuth 2.0
-- Bcrypt for password hashing
-- Joi for request validation
+- Bcrypt
+- Joi (validation)
+- Redis
 
 ## API Endpoints
 
-### Authentication Routes
+### Authentication
+- `POST /innogram/auth/signup` — Register new user
+- `POST /innogram/auth/login` — User login
+- `POST /innogram/auth/logout` — User logout
+- `POST /innogram/auth/refresh-token` — Refresh access token
 
-```http
-POST /innogram/auth/signup      # Register new user
-POST /innogram/auth/login       # User login
-POST /innogram/auth/logout      # User logout
-POST /innogram/auth/refresh-token    # Refresh access token
-POST /innogram/auth/validate-accessToken   # Validate access token
-```
+### Google OAuth
+- `GET /innogram/auth/google-callback` — Google OAuth callback handler
 
-### Google OAuth Routes
-
-```http
-GET /innogram/auth/google-callback    # Google OAuth callback handler
-```
-
-### Password Management Routes
-
-```http
-POST /innogram/password/request-reset  # Request password reset
-POST /innogram/password/reset         # Reset password with token
-```
+### Password Management
+- `POST /innogram/password/request-reset` — Request password reset
+- `POST /innogram/password/reset` — Reset password with token
 
 ## Environment Variables
 
-```env
-NODE_ENV=
-PORT=4000
-SERVER_URL=
-INTERNAL_API_SECRET=your_internal_api_secret
-CORS_ORIGIN=
+See `.env` for all configuration options. Example:
 
-# JWT Configuration
+```env
+NODE_ENV=development
+PORT=4000
+SERVER_URL=http://localhost:3001
+INTERNAL_API_SECRET=your_internal_api_secret
+CORS_ORIGIN=*
 ACCESS_TOKEN_SECRET=your_access_token_secret
 ACCESS_TOKEN_EXPIRE=20m
 REFRESH_TOKEN_SECRET=your_refresh_token_secret
 REFRESH_TOKEN_EXPIRE=1d
 REFRESH_TOKEN_COOKIE_NAME=jid
-
-# Database Configuration
-MONGODB_URI=
+MONGODB_URI=mongodb://localhost:27017
 REDIS_HOST=localhost
 REDIS_PORT=6379
 REDIS_PASSWORD=
-
-# Google OAuth Configuration
 GOOGLE_CLIENT_ID=your_google_client_id
 GOOGLE_CLIENT_SECRET=your_google_client_secret
-GOOGLE_CALLBACK_URL=
+GOOGLE_CALLBACK_URL=http://localhost:4000/innogram/auth/google-callback
+GOOGLE_AUTH_INIT_REDIRECT_URL=http://localhost:3500/auth/google/initiate
 ```
-
-## API Usage Examples
-
-### User Registration
-
-```http
-POST /innogram/auth/signup
-Content-Type: application/json
-x-internal-api-secret: your_internal_api_secret
-
-{
-    "email": "user@example.com",
-    "password": "securePassword123",
-    "username": "user123"
-}
-```
-
-### User Login
-
-```http
-POST /innogram/auth/login
-Content-Type: application/json
-x-internal-api-secret: your_internal_api_secret
-
-{
-    "email": "user@example.com",
-    "password": "securePassword123"
-}
-```
-
-### Password Reset Request
-
-```http
-POST /innogram/password/request-reset
-Content-Type: application/json
-x-internal-api-secret: your_internal_api_secret
-
-{
-    "email": "user@example.com"
-}
-```
-
-## Security Features
-
-- Internal API secret validation for all routes
-- HTTP-only cookies for refresh tokens
-- Password hashing with bcrypt
-- Token rotation on refresh
-- Request validation using Joi schemas
-- CORS protection
-- MongoDB for secure token storage
 
 ## Project Structure
 
 ```
 auth-service/
 ├── configs/                # Configuration files
-│   ├── config.ts          # Environment configuration
-│   ├── cookie.config.ts   # Cookie settings
-│   ├── cors.config.ts     # CORS settings
-│   └── orm.config.ts      # Database configuration
-├── controllers/           # Route controllers
-├── entities/             # Database entities
-│   ├── token-entity.ts
-│   └── password-reset-token.entity.ts
-├── middlewares/          # Custom middlewares
-│   └── verify-internal-request.ts
-├── providers/            # Business logic
-│   ├── auth.provider.ts
-│   ├── google.auth.provider.ts
-│   └── password.provider.ts
-├── schema-validations/   # Request validation schemas
-├── utils/               # Utility functions
-└── app.ts              # Application setup
+├── controllers/            # Route controllers
+├── custom-errors/          # Custom error classes
+├── entities/               # Database entities
+├── enums/                  # Enums
+├── interfaces/             # TypeScript interfaces
+├── middlewares/            # Express middlewares
+├── providers/              # Business logic
+├── schema-validations/     # Joi validation schemas
+├── types/                  # TypeScript types
+├── utils/                  # Utility functions
+├── app.ts                  # Express app setup
+├── main.ts                 # Entry point
+├── swagger.ts              # Swagger docs setup
 ```
 
-## Installation & Setup
+## Running the Service
 
 1. Install dependencies:
-
-```bash
-npm install
-```
-
-2. Set up environment variables:
-
-- Copy `.env.example` to `.env`
-- Fill in required values
-
-3. Start MongoDB:
-
-```bash
-# Make sure MongoDB is running on localhost:27017
-```
-
+   ```bash
+   npm install
+   ```
+2. Set up your `.env` file (see example above).
+3. Start MongoDB and Redis locally.
 4. Start the service:
+   ```bash
+   npm run start
+   ```
+5. API docs available at: `http://localhost:4000/api-docs`
 
-```bash
-npm run start
-```
-
-## Error Handling
-
-The service uses standard HTTP status codes:
-
-- 200: Success
-- 400: Bad Request (validation errors)
-- 401: Unauthorized
-- 403: Forbidden (invalid internal API secret)
-- 500: Internal Server Error
-
-## Development
-
-```bash
-# Run in development mode
-npm run start
-
-# Run tests (when implemented)
-npm run test
-```
+## Security
+- All endpoints require the `x-internal-api-secret` header for internal API validation.
+- Refresh tokens are stored in HTTP-only cookies.
+- Passwords are hashed with bcrypt.
+- Rate limiting for password reset requests.
 
 ## License
 
-MIT
+
