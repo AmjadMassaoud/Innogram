@@ -68,6 +68,10 @@ export async function handleSignUp(
       throw new AuthenticationError(error.message, httpStatus.UNAUTHORIZED);
     }
 
+    if (error instanceof UserAlreadyExistsError) {
+      throw error;
+    }
+
     throw new AuthenticationError(
       'An internal server error occurred during login.',
       httpStatus.INTERNAL_SERVER_ERROR,
@@ -84,6 +88,7 @@ export async function handleLogin(
     const user = await UserAuthRepo.findOneBy({ email: email });
 
     if (!user) {
+      console.log('why does not throw');
       throw new UserNotFoundError('User not found');
     }
 
@@ -119,11 +124,11 @@ export async function handleLogin(
     };
   } catch (error) {
     if (error instanceof UserNotFoundError) {
-      throw new AuthenticationError(error.message, httpStatus.NOT_FOUND);
+      throw error;
     }
 
     if (error instanceof InvalidCredentialsError) {
-      throw new AuthenticationError(error.message, httpStatus.UNAUTHORIZED);
+      throw error;
     }
 
     // For all other unexpected errors
@@ -160,6 +165,10 @@ export async function handleRefreshToken(
 
     return { refreshToken, accessToken };
   } catch (error) {
+    if (error instanceof UserNotFoundError) {
+      throw error;
+    }
+
     if (error instanceof NoTokenProvidedError) {
       throw new NoTokenProvidedError();
     }

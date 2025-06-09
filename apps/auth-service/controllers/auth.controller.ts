@@ -15,7 +15,6 @@ import {
 import httpStatus from 'http-status';
 import config from '../configs/config';
 import type { Request, Response } from 'express';
-import { AuthenticationError } from '../custom-errors/auth.errors';
 import { NoTokenProvidedError } from '../custom-errors/token.errors';
 
 const authController = Router();
@@ -115,6 +114,7 @@ const authController = Router();
  */
 authController.post('/login', async (req: Request, res: Response) => {
   const { error, value } = loginSchema.validate(req.body);
+
   if (error) {
     res.status(httpStatus.BAD_REQUEST).json({
       error: error.details[0].message,
@@ -138,11 +138,8 @@ authController.post('/login', async (req: Request, res: Response) => {
         ...user,
       },
     });
-  } catch {
-    throw new AuthenticationError(
-      'An internal server error occurred during signup.',
-      httpStatus.INTERNAL_SERVER_ERROR,
-    );
+  } catch (error) {
+    throw error;
   }
 });
 
@@ -257,11 +254,8 @@ authController.post('/signup', async (req: Request, res: Response) => {
         ...user,
       },
     });
-  } catch {
-    throw new AuthenticationError(
-      'An internal server error occurred during signup.',
-      httpStatus.INTERNAL_SERVER_ERROR,
-    );
+  } catch (error) {
+    throw error;
   }
 });
 
@@ -326,11 +320,8 @@ authController.post('/logout', async (req: Request, res: Response) => {
     });
 
     res.status(httpStatus.OK).json({ message: 'Logged out successfully' });
-  } catch {
-    throw new AuthenticationError(
-      'An internal server error occurred during signup.',
-      httpStatus.INTERNAL_SERVER_ERROR,
-    );
+  } catch (error) {
+    throw error;
   }
 });
 
@@ -402,11 +393,8 @@ authController.post('/refresh-token', async (req: Request, res: Response) => {
     });
 
     res.json({ accessToken });
-  } catch {
-    throw new AuthenticationError(
-      'An internal server error occurred during signup.',
-      httpStatus.INTERNAL_SERVER_ERROR,
-    );
+  } catch (error) {
+    throw error;
   }
 });
 
@@ -499,11 +487,8 @@ authController.post('/google-callback', async (req: Request, res: Response) => {
       accessToken,
       ...user,
     });
-  } catch {
-    throw new AuthenticationError(
-      'An internal server error occurred during signup.',
-      httpStatus.INTERNAL_SERVER_ERROR,
-    );
+  } catch (error) {
+    throw error;
   }
 });
 

@@ -78,6 +78,18 @@ export const requestTokenReset = async (
       attemptsRemaining: MAX_ATTEMPTS - attempts,
     };
   } catch (error) {
+    if (error instanceof TooManyRequestsError) {
+      throw error;
+    }
+
+    if (error instanceof ResetTokenAlreadyExistsError) {
+      throw error;
+    }
+
+    if (error instanceof UserNotFoundError) {
+      throw error;
+    }
+
     throw new PasswordResetRequestError(
       'Could not process password reset request due to an internal error.',
       httpStatus.INTERNAL_SERVER_ERROR,
@@ -140,6 +152,18 @@ export const resetUserPassword = async (
       throw new PasswordResetRequestError();
     }
   } catch (error) {
+    if (error instanceof NoTokenProvidedError) {
+      throw error;
+    }
+
+    if (error instanceof TokenExpiredError) {
+      throw error;
+    }
+
+    if (error instanceof UserNotFoundError) {
+      throw error;
+    }
+
     throw new Error('An internal server error occurred during password reset.');
   }
 };
