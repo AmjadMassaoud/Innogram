@@ -127,7 +127,7 @@ authController.post('/login', async (req: Request, res: Response) => {
 
     res.cookie('jid', refreshToken, {
       httpOnly: true,
-      path: '/innogram/auth',
+      path: '/',
       sameSite: 'lax',
       secure: config.node_env === 'production',
     });
@@ -243,7 +243,7 @@ authController.post('/signup', async (req: Request, res: Response) => {
 
     res.cookie('jid', refreshToken, {
       httpOnly: true,
-      path: '/innogram/auth',
+      path: '/',
       sameSite: 'lax',
       secure: config.node_env === 'production',
     });
@@ -316,7 +316,7 @@ authController.post('/logout', async (req: Request, res: Response) => {
     await handleLogout(token);
 
     res.clearCookie('jid', {
-      path: '/innogram/auth',
+      path: '/',
     });
 
     res.status(httpStatus.OK).json({ message: 'Logged out successfully' });
@@ -387,7 +387,7 @@ authController.post('/refresh-token', async (req: Request, res: Response) => {
 
     res.cookie('jid', refreshToken, {
       httpOnly: true,
-      path: '/innogram/auth',
+      path: '/',
       sameSite: 'lax',
       secure: config.node_env === 'production',
     });
