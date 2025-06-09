@@ -249,6 +249,7 @@ authController.post('/signup', async (req: Request, res: Response) => {
     });
 
     res.json({
+      refreshToken,
       accessToken,
       user: {
         ...user,
