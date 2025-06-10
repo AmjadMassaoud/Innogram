@@ -6,8 +6,10 @@ export const validationSchema = Joi.object({
     .required()
     .default('development'),
 
-  // PORT: Joi.number().optional(),
+  PORT: Joi.number().required(),
   MICROSERVICE_PORT: Joi.number().optional(),
+
+  AUTH_SERVICE_BASEURL: Joi.string().required(),
 
   DATABASE_HOST: Joi.string().optional(),
   DATABASE_PORT: Joi.number().optional().default(5432),
@@ -17,16 +19,5 @@ export const validationSchema = Joi.object({
   DATABASE_SYNC: Joi.boolean()
     .optional()
     .default(process.env.NODE_ENV === 'development'),
-
-  // // JWT (if used by NestJS services for validating tokens issued by auth-service)
-  // JWT_SECRET: Joi.string().when('NODE_ENV', {
-  //   is: 'production',
-  //   then: Joi.required(),
-  //   otherwise: Joi.optional().default('your-development-secret'), // Default for dev
-  // }),
-  // JWT_EXPIRES_IN: Joi.string().default('1h'),
-
-  // // Redis
-  // REDIS_HOST: Joi.string().default('localhost'),
-  // REDIS_PORT: Joi.number().default(6379),
+  INTERNAL_API_SECRET: Joi.string().required(),
 });
