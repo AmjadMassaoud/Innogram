@@ -1,11 +1,11 @@
 import express from 'express';
 import authController from './controllers/auth.controller';
-import passwordRouter from './controllers/password.controller';
+import passwordController from './controllers/password.controller';
 import { corsErrorHandler } from './configs/cors.config';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import config from './configs/config';
-import verifyInternalReq from './middlewares/verify-internal-request';
+import verifyInternalReq from './middlewares/verify-internal-request.middleware';
 import swaggerUi from 'swagger-ui-express';
 import swaggerSpec from './swagger';
 
@@ -35,6 +35,6 @@ app.use(verifyInternalReq);
 app.use(express.json());
 
 app.use('/innogram/auth', authController);
-app.use('/innogram/password', passwordRouter);
+app.use('/innogram/password', passwordController);
 
 export default app;

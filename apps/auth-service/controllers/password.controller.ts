@@ -2,9 +2,13 @@ import { Router } from 'express';
 import {
   requestTokenReset,
   resetUserPassword,
-} from '../providers/password.provider';
+} from '../services/password.service';
 import type { Request, Response } from 'express';
-import { passwordResetSchema } from '../schema-validations/password.validation';
+import {
+  passwordResetSchema,
+  requestPasswordResetSchema,
+} from '../common/schema-validations/password.validation';
+import { validateBody } from '../middlewares/validate-body.middleware';
 
 const router = Router();
 
@@ -74,11 +78,12 @@ const router = Router();
  *       500:
  *         description: Internal Server Error - Could not process password reset request.
  */
-router.post('/request-reset', async (req: Request, res: Response) => {
-  const { email } = req.body;
-  if (!email) res.status(400).json({ message: 'Email is required' });
+router.post(
+  '/request-reset',
+  validateBody(requestPasswordResetSchema),
+  async (req: Request, res: Response) => {
+    const { email } = req.body;
 
-  try {
     const { attemptsRemaining, hashedToken, message } =
       await requestTokenReset(email);
 
@@ -87,10 +92,8 @@ router.post('/request-reset', async (req: Request, res: Response) => {
       hashedToken,
       attemptsRemaining,
     });
-  } catch (error) {
-    throw error;
-  }
-});
+  },
+);
 
 /**
  * @openapi
@@ -154,22 +157,20 @@ router.post('/request-reset', async (req: Request, res: Response) => {
  *       500:
  *         description: Internal Server Error - An error occurred during password reset.
  */
-router.post('/reset', async (req: Request, res: Response) => {
-  const { error, value } = passwordResetSchema.validate(req.body);
+router.post(
+  '/reset',
+  validateBody(passwordResetSchema),
+  async (req: Request, res: Response) => {
+    try {
+      const reseted: string = await resetUserPassword(req.body);
 
-  if (error) {
-    throw error;
-  }
-
-  try {
-    const reseted: string = await resetUserPassword(value);
-
-    if (reseted) {
-      res.json({ message: reseted });
+      if (reseted) {
+        res.json({ message: reseted });
+      }
+    } catch (error) {
+      throw error;
     }
-  } catch (error) {
-    throw error;
-  }
-});
+  },
+);
 
 export default router;

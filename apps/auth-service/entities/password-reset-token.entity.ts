@@ -1,26 +1,12 @@
-import {
-  Entity,
-  ObjectIdColumn,
-  Column,
-  CreateDateColumn,
-  Index,
-} from 'typeorm';
+import { Entity, Column, Index } from 'typeorm';
+import { BaseEntity } from './entities-base.entity';
 
 @Entity('password-reset-tokens')
-export class PasswordResetTokenEntity {
-  @ObjectIdColumn()
-  id!: string;
-
+export class PasswordResetTokenEntity extends BaseEntity {
   @Index()
   @Column({ unique: true })
   email!: string;
 
   @Column({ unique: true })
   hashedToken!: string;
-
-  @Column()
-  expiresAt!: Date;
-
-  @CreateDateColumn()
-  createdAt!: Date;
 }

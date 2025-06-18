@@ -1,5 +1,12 @@
 import Joi from 'joi';
 
+export const requestPasswordResetSchema = Joi.object({
+  email: Joi.string().email().required().messages({
+    'string.email': 'Email must be a valid email address',
+    'any.required': 'Email is required',
+  }),
+});
+
 export const passwordResetSchema = Joi.object({
   email: Joi.string().email().required().messages({
     'string.email': 'Email must be a valid email address',

@@ -4,18 +4,19 @@ import {
   handleSignUp,
   handleLogout,
   handleRefreshToken,
-} from '../providers/auth.provider';
+} from '../services/auth.service';
 import { refreshTokenCookieConfig } from '../configs/cookie.config';
 
-import { handleGoogleAuthCallback } from '../providers/google.auth.provider';
+import { handleGoogleAuthCallback } from '../services/google.auth.service';
 import {
   loginSchema,
   signupSchema,
-} from '../schema-validations/auth.validation';
+} from '../common/schema-validations/auth.validation';
 import httpStatus from 'http-status';
 import config from '../configs/config';
 import type { Request, Response } from 'express';
 import { NoTokenProvidedError } from '../custom-errors/token.errors';
+import { validateBody } from '../middlewares/validate-body.middleware';
 
 const authController = Router();
 
@@ -112,18 +113,11 @@ const authController = Router();
  *                   type: string
  *                   example: "An internal server error occurred during login."
  */
-authController.post('/login', async (req: Request, res: Response) => {
-  const { error, value } = loginSchema.validate(req.body);
-
-  if (error) {
-    res.status(httpStatus.BAD_REQUEST).json({
-      error: error.details[0].message,
-    });
-    return;
-  }
-
-  try {
-    const { refreshToken, accessToken, user } = await handleLogin(value);
+authController.post(
+  '/login',
+  validateBody(loginSchema),
+  async (req: Request, res: Response) => {
+    const { refreshToken, accessToken, user } = await handleLogin(req.body);
 
     res.cookie('jid', refreshToken, {
       httpOnly: true,
@@ -138,10 +132,8 @@ authController.post('/login', async (req: Request, res: Response) => {
         ...user,
       },
     });
-  } catch (error) {
-    throw error;
-  }
-});
+  },
+);
 
 /**
  * @openapi
@@ -229,17 +221,11 @@ authController.post('/login', async (req: Request, res: Response) => {
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-authController.post('/signup', async (req: Request, res: Response) => {
-  const { error, value } = signupSchema.validate(req.body);
-  if (error) {
-    res.status(httpStatus.BAD_REQUEST).json({
-      error: error.details[0].message,
-    });
-    return;
-  }
-
-  try {
-    const { accessToken, refreshToken, user } = await handleSignUp(value);
+authController.post(
+  '/signup',
+  validateBody(signupSchema),
+  async (req: Request, res: Response) => {
+    const { accessToken, refreshToken, user } = await handleSignUp(req.body);
 
     res.cookie('jid', refreshToken, {
       httpOnly: true,
@@ -255,10 +241,8 @@ authController.post('/signup', async (req: Request, res: Response) => {
         ...user,
       },
     });
-  } catch (error) {
-    throw error;
-  }
-});
+  },
+);
 
 /**
  * @openapi
@@ -308,22 +292,18 @@ authController.post('/signup', async (req: Request, res: Response) => {
  *         description: Internal Server Error
  */
 authController.post('/logout', async (req: Request, res: Response) => {
-  const token = req.cookies.jid;
+  const token = req.cookies.jid as string;
   if (!token) {
     throw new NoTokenProvidedError();
   }
 
-  try {
-    await handleLogout(token);
+  await handleLogout(token);
 
-    res.clearCookie('jid', {
-      path: '/',
-    });
+  res.clearCookie('jid', {
+    path: '/',
+  });
 
-    res.status(httpStatus.OK).json({ message: 'Logged out successfully' });
-  } catch (error) {
-    throw error;
-  }
+  res.status(httpStatus.OK).json({ message: 'Logged out successfully' });
 });
 
 /**
@@ -378,25 +358,22 @@ authController.post('/logout', async (req: Request, res: Response) => {
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 authController.post('/refresh-token', async (req: Request, res: Response) => {
-  const token = req.cookies.jid;
+  const token = req.cookies.jid as string;
+
   if (!token) {
     throw new NoTokenProvidedError();
   }
 
-  try {
-    const { accessToken, refreshToken } = await handleRefreshToken(token);
+  const { accessToken, refreshToken } = await handleRefreshToken(token);
 
-    res.cookie('jid', refreshToken, {
-      httpOnly: true,
-      path: '/',
-      sameSite: 'lax',
-      secure: config.node_env === 'production',
-    });
+  res.cookie('jid', refreshToken, {
+    httpOnly: true,
+    path: '/',
+    sameSite: 'lax',
+    secure: config.node_env === 'production',
+  });
 
-    res.json({ accessToken });
-  } catch (error) {
-    throw error;
-  }
+  res.json({ accessToken });
 });
 
 /**
@@ -472,25 +449,21 @@ authController.post('/google-callback', async (req: Request, res: Response) => {
     return;
   }
 
-  try {
-    const { newRefreshToken, message, accessToken, user } =
-      await handleGoogleAuthCallback(code);
+  const { newRefreshToken, message, accessToken, user } =
+    await handleGoogleAuthCallback(code);
 
-    if (newRefreshToken) {
-      res.cookie('jid', newRefreshToken, {
-        ...refreshTokenCookieConfig,
-        path: '/',
-      });
-    }
-
-    res.status(httpStatus.OK).json({
-      message,
-      accessToken,
-      ...user,
+  if (newRefreshToken) {
+    res.cookie('jid', newRefreshToken, {
+      ...refreshTokenCookieConfig,
+      path: '/',
     });
-  } catch (error) {
-    throw error;
   }
+
+  res.status(httpStatus.OK).json({
+    message,
+    accessToken,
+    ...user,
+  });
 });
 
 /**

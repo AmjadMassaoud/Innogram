@@ -32,5 +32,3 @@ export async function incrementResetAttempts(email: string): Promise<number> {
   await redisClient.expire(`${RESET_TOKEN_ATTEMPTS}${email}`, ATTEMPT_EXPIRY);
   return attempts;
 }
-
-export default redisClient;

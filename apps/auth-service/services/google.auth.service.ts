@@ -8,14 +8,14 @@ import {
 import { UserAuthEntity } from '../entities/user-auth.entity';
 import dataSource from '../configs/orm.config';
 
-import { generateAccessToken, generateRefreshToken } from '../utils/token.util';
+import { generateAccessToken, generateRefreshToken } from './token.service';
 
 import config from '../configs/config';
 
 import { Repository } from 'typeorm';
-import { RegistrationMethodEnum } from '../enums/registration-method.enum';
+import { ERegistrationMethod } from '../common/enums/registration-method.enum';
 import { GoogleAuthVerificationError } from '../custom-errors/google-auth.errors';
-import { GoogleAuthReturnType } from '../interfaces/google-auth-interfaces/google-auth.interface';
+import { IGoogleAuthReturnType } from '../common/interfaces/google-auth-interfaces/google-auth.interface';
 import { AuthenticationError } from '../custom-errors/auth.errors';
 
 const oAuth2Client = new OAuth2Client(
@@ -27,7 +27,7 @@ const oAuth2Client = new OAuth2Client(
 // Handles the callback from Google after user authentication.
 export const handleGoogleAuthCallback = async (
   code: string,
-): Promise<GoogleAuthReturnType> => {
+): Promise<IGoogleAuthReturnType> => {
   try {
     // Exchange the authorization code for tokens from Google
     const { tokens } = await oAuth2Client.getToken(code);
@@ -63,7 +63,7 @@ export const handleGoogleAuthCallback = async (
         email: userEmail,
         password: passwordPlaceholder,
         username: userName,
-        registrationMethod: RegistrationMethodEnum.GOOGLE,
+        registrationMethod: ERegistrationMethod.GOOGLE,
         googleUserId: googleUserId,
       });
       primaryUserRecord = await userAuthRepo.save(primaryUserRecord);
@@ -73,7 +73,7 @@ export const handleGoogleAuthCallback = async (
 
     // Generating app's token
     const jwtPayloadForApp = {
-      userId: user.id.toHexString(), // canonical user id
+      userId: user.id.toString(), // canonical user id
       email: user.email,
     };
 
@@ -91,7 +91,7 @@ export const handleGoogleAuthCallback = async (
         username: user.username,
         password: user.password, // Carry over from USER_ACCOUNT
         refreshToken: newRefreshToken,
-        registrationMethod: RegistrationMethodEnum.GOOGLE,
+        registrationMethod: ERegistrationMethod.GOOGLE,
         expiresAt: new Date(Date.now() + refreshTokenExpiresInMs),
       },
     );

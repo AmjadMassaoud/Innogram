@@ -1,19 +1,10 @@
-import {
-  ObjectIdColumn,
-  Column,
-  Entity,
-  CreateDateColumn,
-  UpdateDateColumn,
-  ObjectId,
-} from 'typeorm';
-import { RegistrationMethodEnum } from '../enums/registration-method.enum';
-import { refreshTokenType } from '../types/refresh-token.type';
+import { Column, Entity, UpdateDateColumn } from 'typeorm';
+import { TRefreshToken } from '../common/types/t-refresh.token';
+import { ERegistrationMethod } from '../common/enums/registration-method.enum';
+import { BaseEntity } from './entities-base.entity';
 
 @Entity('user-auth')
-export class UserAuthEntity {
-  @ObjectIdColumn()
-  id!: ObjectId;
-
+export class UserAuthEntity extends BaseEntity {
   @Column({ type: 'string' })
   username!: string;
 
@@ -24,7 +15,7 @@ export class UserAuthEntity {
   password!: string;
 
   @Column({ type: 'string', nullable: true })
-  refreshToken!: refreshTokenType;
+  refreshToken!: TRefreshToken;
 
   @Column({ type: 'string' })
   type!: string;
@@ -32,15 +23,9 @@ export class UserAuthEntity {
   @Column({ type: 'string', nullable: true })
   googleUserId!: string;
 
-  @Column({ type: 'string', default: RegistrationMethodEnum.EMAIL })
-  registrationMethod!: RegistrationMethodEnum;
-
-  @CreateDateColumn()
-  createdAt!: Date;
+  @Column({ type: 'string', default: ERegistrationMethod.EMAIL })
+  registrationMethod!: ERegistrationMethod;
 
   @UpdateDateColumn()
   databaseUpdatedAt!: Date;
-
-  @Column()
-  expiresAt!: Date;
 }

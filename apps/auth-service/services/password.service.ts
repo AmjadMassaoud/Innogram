@@ -3,17 +3,11 @@ import { PasswordResetTokenEntity } from '../entities/password-reset-token.entit
 import dataSource from '../configs/orm.config';
 import * as crypto from 'crypto';
 import httpStatus from 'http-status';
-import {
-  setResetToken,
-  getResetToken,
-  incrementResetAttempts,
-  MAX_ATTEMPTS,
-} from '../utils/redis.util';
 import { hashPassword } from '../utils/password.util';
 import {
-  RequestTokenResetReturnType,
-  ResetUserPasswordValueParam,
-} from '../interfaces/password-provider-interfaces/password-provider.interface';
+  IRequestTokenResetReturnType,
+  IResetUserPasswordValueParam,
+} from '../common/interfaces/password-provider-interfaces/password-provider.interface';
 import {
   PasswordResetRequestError,
   ResetTokenAlreadyExistsError,
@@ -24,11 +18,17 @@ import {
   NoTokenProvidedError,
   TokenExpiredError,
 } from '../custom-errors/token.errors';
+import {
+  MAX_ATTEMPTS,
+  incrementResetAttempts,
+  getResetToken,
+  setResetToken,
+} from './redis.service';
 
 // Request password reset: generates a reset token and sets expiresAt
 export const requestTokenReset = async (
   email: string,
-): Promise<RequestTokenResetReturnType> => {
+): Promise<IRequestTokenResetReturnType> => {
   try {
     const attempts = await incrementResetAttempts(email);
     if (attempts > MAX_ATTEMPTS) {
@@ -99,7 +99,7 @@ export const requestTokenReset = async (
 
 // Reset password: verifies token and updates password
 export const resetUserPassword = async (
-  value: ResetUserPasswordValueParam,
+  value: IResetUserPasswordValueParam,
 ): Promise<string> => {
   const { email, resetToken, newPassword } = value;
 
@@ -124,7 +124,7 @@ export const resetUserPassword = async (
       throw new NoTokenProvidedError();
     }
 
-    if (userPassTokenRecord.expiresAt < new Date()) {
+    if (userPassTokenRecord?.expiresAt! < new Date()) {
       throw new TokenExpiredError();
     }
 

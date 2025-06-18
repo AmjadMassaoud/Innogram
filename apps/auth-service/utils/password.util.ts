@@ -4,7 +4,7 @@ import util from 'node:util';
 const PBKDF2_ITERATIONS = 100000; // NIST recommendation: at least 10,000. Higher is better.
 const PBKDF2_KEYLEN = 64; // Desired key length in bytes (e.g., 64 for SHA512)
 const PBKDF2_DIGEST = 'sha512'; // Digest algorithm
-const SALT_BYTES = 16; // Recommended salt length
+const SALT_BYTES = 16; // salt length
 const HASH_DELIMITER = ':'; // Delimiter to separate salt and hash
 
 const pbkdf2Async = util.promisify(crypto.pbkdf2);

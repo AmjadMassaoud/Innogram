@@ -1,4 +1,4 @@
-export interface GoogleAuthReturnType {
+export interface IGoogleAuthReturnType {
   newRefreshToken: string;
   message: string;
   accessToken: string;

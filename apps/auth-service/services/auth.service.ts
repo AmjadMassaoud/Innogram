@@ -5,7 +5,7 @@ import {
   generateRefreshToken,
   verifyRefreshToken,
   invalidateRefreshToken,
-} from '../utils/token.util';
+} from './token.service';
 
 import { UserAuthEntity } from '../entities/user-auth.entity';
 import { hashPassword, verifyPassword } from '../utils/password.util'; // Adjust path if needed
@@ -16,19 +16,19 @@ import {
   UserNotFoundError,
 } from '../custom-errors/auth.errors';
 import {
-  LoginReturnType,
-  LoginValueParam,
-  signupReturnType,
-  SignupValueParam,
-} from '../interfaces/auth-provider-interfaces/login-value.interface';
-import { RefreshTokenReturnTtype } from '../interfaces/auth-provider-interfaces/token.interface';
+  ILoginReturnType,
+  ILoginValueParam,
+  TSignupReturnType,
+  ISignupValueParam,
+} from '../common/interfaces/auth-provider-interfaces/login-value.interface';
+import { IRefreshTokenReturn } from '../common/interfaces/auth-provider-interfaces/token.interface';
 import { NoTokenProvidedError } from '../custom-errors/token.errors';
 
 const UserAuthRepo = dataSource.getRepository(UserAuthEntity);
 
 export async function handleSignUp(
-  value: SignupValueParam,
-): Promise<signupReturnType> {
+  value: ISignupValueParam,
+): Promise<TSignupReturnType> {
   try {
     const { email, password, username } = value;
 
@@ -47,7 +47,7 @@ export async function handleSignUp(
     });
 
     const tokenPayload = {
-      userId: user.id.toHexString(),
+      userId: user.id.toString(),
       email: user.email,
     };
 
@@ -58,7 +58,7 @@ export async function handleSignUp(
       refreshToken,
       accessToken,
       user: {
-        id: user.id.toHexString(),
+        id: user.id.toString(),
         email: user.email,
         username: user.username,
       },
@@ -80,8 +80,8 @@ export async function handleSignUp(
 }
 
 export async function handleLogin(
-  value: LoginValueParam,
-): Promise<LoginReturnType> {
+  value: ILoginValueParam,
+): Promise<ILoginReturnType> {
   try {
     const { email, password } = value;
 
@@ -98,7 +98,7 @@ export async function handleLogin(
     }
 
     const tokenPayload = {
-      userId: user.id.toHexString(),
+      userId: user.id.toString(),
       email: user.email,
     };
 
@@ -116,7 +116,7 @@ export async function handleLogin(
       refreshToken,
       accessToken,
       user: {
-        id: user.id.toHexString(),
+        id: user.id.toString(),
         email: user.email,
         username: user.username,
       },
@@ -140,7 +140,7 @@ export async function handleLogin(
 
 export async function handleRefreshToken(
   token: string,
-): Promise<RefreshTokenReturnTtype> {
+): Promise<IRefreshTokenReturn> {
   try {
     const payload = await verifyRefreshToken(token);
 
@@ -153,7 +153,7 @@ export async function handleRefreshToken(
     }
 
     const tokenPayload = {
-      userId: user.id.toHexString(),
+      userId: user.id.toString(),
       email: user.email,
     };
 
