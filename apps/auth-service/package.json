@@ -2,6 +2,7 @@
   "name": "@innogram/auth-service",
   "version": "1.0.0",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "start:dev": "ts-node main.ts",
     "build": "tsc",
