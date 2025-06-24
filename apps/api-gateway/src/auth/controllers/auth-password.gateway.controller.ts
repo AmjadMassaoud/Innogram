@@ -1,12 +1,9 @@
 import { Body, Controller, Post } from '@nestjs/common';
-import { PublicRoute } from '../../utils/custom-decorators/public-route.decorator';
-import { AuthHttpProvider } from '../../servicers-providers/auth-service/auth.http.provider';
-import {
-  RequestPasswordResetDTO,
-  ResetPasswordDTO,
-} from '../../services-dtos/auth-dto/auth.dto';
+import { PublicRoute } from '../../common/decorators/public-route.decorator';
+import { AuthHttpProvider } from '../providers/auth.http.provider';
+import { RequestPasswordResetDto, ResetPasswordDto } from '../dtos/auth.dto';
 import { ApiCreatedResponse } from '@nestjs/swagger';
-import { RequestPasswordResetResponse } from '../../services-interfaces/auth.interfaces';
+import { RequestPasswordResetResponse } from '../interfaces/auth.interfaces';
 
 @Controller('api-gateway/password')
 export class AuthPasswordGatewayController {
@@ -17,7 +14,7 @@ export class AuthPasswordGatewayController {
   @ApiCreatedResponse({
     description:
       'Requests Auth-service to send a password reset token to be used with Email-service',
-    type: RequestPasswordResetDTO,
+    type: RequestPasswordResetDto,
   })
   async requestPasswordReset(@Body() email: RequestPasswordResetResponse) {
     return this.authHttpProvider.requestPasswordReset(email);
@@ -29,7 +26,7 @@ export class AuthPasswordGatewayController {
     description: 'Returns a successful message.',
   })
   async resetUserPassword(
-    @Body() userCredentials: ResetPasswordDTO,
+    @Body() userCredentials: ResetPasswordDto,
   ): Promise<{ message: string }> {
     return this.authHttpProvider.resetUserPassword(userCredentials);
   }

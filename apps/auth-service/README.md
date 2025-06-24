@@ -1,6 +1,7 @@
 # Auth Service
 
-Authentication microservice for the Innogram application, responsible for user authentication, authorization, token management, and OAuth integration.
+Authentication microservice for the Innogram application, responsible for user authentication, authorization, token
+management, and OAuth integration.
 
 ## Features
 
@@ -18,68 +19,51 @@ Authentication microservice for the Innogram application, responsible for user a
 - TypeORM (MongoDB)
 - JWT
 - Google OAuth 2.0
-- Bcrypt
 - Joi (validation)
 - Redis
 
 ## API Endpoints
 
 ### Authentication
+
 - `POST /innogram/auth/signup` — Register new user
 - `POST /innogram/auth/login` — User login
 - `POST /innogram/auth/logout` — User logout
 - `POST /innogram/auth/refresh-token` — Refresh access token
 
 ### Google OAuth
+
 - `GET /innogram/auth/google-callback` — Google OAuth callback handler
 
 ### Password Management
+
 - `POST /innogram/password/request-reset` — Request password reset
 - `POST /innogram/password/reset` — Reset password with token
-
-## Environment Variables
-
-See `.env` for all configuration options. Example:
-
-```env
-NODE_ENV=development
-PORT=4000
-SERVER_URL=http://localhost:3001
-INTERNAL_API_SECRET=your_internal_api_secret
-CORS_ORIGIN=*
-ACCESS_TOKEN_SECRET=your_access_token_secret
-ACCESS_TOKEN_EXPIRE=20m
-REFRESH_TOKEN_SECRET=your_refresh_token_secret
-REFRESH_TOKEN_EXPIRE=1d
-REFRESH_TOKEN_COOKIE_NAME=jid
-MONGODB_URI=mongodb://localhost:27017
-REDIS_HOST=localhost
-REDIS_PORT=6379
-REDIS_PASSWORD=
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
-GOOGLE_CALLBACK_URL=http://localhost:4000/innogram/auth/google-callback
-GOOGLE_AUTH_INIT_REDIRECT_URL=http://localhost:3500/auth/google/initiate
-```
 
 ## Project Structure
 
 ```
-auth-service/
-├── configs/                # Configuration files
-├── controllers/            # Route controllers
-├── custom-errors/          # Custom error classes
-├── entities/               # Database entities
-├── enums/                  # Enums
-├── interfaces/             # TypeScript interfaces
-├── middlewares/            # Express middlewares
-├── providers/              # Business logic
-├── schema-validations/     # Joi validation schemas
-├── types/                  # TypeScript types
-├── utils/                  # Utility functions
-├── app.ts                  # Express app setup
-├── main.ts                 # Entry point
-├── swagger.ts              # Swagger docs setup
+/apps/auth-service
+│
+├── common/             # Shared utilities, interfaces, or constants for this service.
+├── configs/            # Configuration files (e.g., database, environment, CORS).
+├── controllers/        # Handles incoming API requests, validates input, and sends responses.
+├── custom-errors/      # Custom error classes for specific application failures.
+├── entities/           # TypeORM entity definitions that map to database tables/collections.
+├── middlewares/        # Express middleware functions (e.g., for logging, authentication checks).
+├── services/           # Contains the core business logic of the application.
+├── utils/              # Utility functions and helpers (e.g., token generation, error handling).
+│
+├── .env                # Local environment variables (should be in .gitignore).
+├── .env.example        # Example environment variables for setting up the project.
+├── .gitignore          # Specifies files and folders to be ignored by Git.
+├── app.ts              # Express application setup (middleware, routes, etc.).
+├── Dockerfile          # Instructions for building the production Docker container.
+├── main.ts             # The entry point of the application; starts the server.
+├── package.json        # Project metadata and list of dependencies.
+├── README.md           # This documentation file.
+├── swagger.ts          # Swagger/OpenAPI documentation setup.
+└── tsconfig.json       # TypeScript compiler configuration for this service.
 ```
 
 ## Running the Service
@@ -90,18 +74,48 @@ auth-service/
    ```
 2. Set up your `.env` file (see example above).
 3. Start MongoDB and Redis locally.
-4. Start the service:
+4. Start the service at the root of the project:
    ```bash
-   npm run start
+   npm run start:dev:auth-service
    ```
 5. API docs available at: `http://localhost:4000/api-docs`
 
+---
+
+## Running Auth-service using Docker.
+
+1. Install docker:
+2. At the root of the project, run the following command:
+   ```bash
+   docker-compose build
+   ```
+
+#### Ensure all containers are on the same network:**
+
+All services (auth-service, MongoDB, Redis, etc.) must be attached to the same Docker network named `innogram-net`.  
+If the network does not exist, create it with:
+
+   ```bash
+      docker network create innogram-net
+  ````
+
+#### Running containers with variables
+
+1. You could write environment variables in docker-compose.
+2. You can also run your container with env files with the following command:
+   ```bash
+      docker run --name container-name --env-file ./apps/auth-service/.env.example -p 3002:3002 --network innogram-net auth-service-image-name
+   ```
+
 ## Security
+
+- Make sure your `.env` file is properly configured for both local and Docker environments.
 - All endpoints require the `x-internal-api-secret` header for internal API validation.
+    - This header is used to authenticate internal requests, ensuring only authorized services can access the API.
+    - You must add `x-internal-api-secret` to your request headers.
+    - If you're targeting auth-service from API-Gateway, you don't have to add `x-internal-api-secret` to your request
+      headers.
 - Refresh tokens are stored in HTTP-only cookies.
-- Passwords are hashed with bcrypt.
+- Passwords are hashed.
 - Rate limiting for password reset requests.
-
-## License
-
 

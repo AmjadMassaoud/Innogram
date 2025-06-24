@@ -5,7 +5,7 @@ import {
   IsStrongPassword,
 } from 'class-validator';
 
-export class UserLoginDTO {
+export class UserLoginDto {
   @IsEmail()
   @IsString()
   email!: string;
@@ -15,19 +15,19 @@ export class UserLoginDTO {
   password!: string;
 }
 
-export class UserRegistrationDTO extends UserLoginDTO {
+export class UserRegistrationDto extends UserLoginDto {
   @IsString()
   @IsNotEmpty()
   username!: string;
 }
 
-export class RequestPasswordResetDTO {
+export class RequestPasswordResetDto {
   @IsEmail()
   @IsNotEmpty()
   email!: string;
 }
 
-export class ResetPasswordDTO {
+export class ResetPasswordDto {
   @IsEmail()
   @IsNotEmpty()
   email!: string;

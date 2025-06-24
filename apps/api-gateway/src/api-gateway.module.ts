@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { AuthGatewayModule } from './services-modules/auth.gateway.module';
+import { AuthGatewayModule } from './auth/auth.gateway.module';
 import { ConfigLibModule } from '@app/config-lib';
 import { ThrottlerModule } from '@nestjs/throttler';
 

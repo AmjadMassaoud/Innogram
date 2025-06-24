@@ -6,7 +6,9 @@
     "deleteOutDir": true,
     "webpack": true,
     "tsConfigPath": "apps/api-gateway/tsconfig.app.json",
-    "plugins": ["@nestjs/swagger"]
+    "plugins": [
+      "@nestjs/swagger"
+    ]
   },
   "monorepo": true,
   "root": "apps/Innogram",
@@ -20,7 +22,6 @@
         "tsConfigPath": "apps/api-gateway/tsconfig.app.json"
       }
     },
-
     "config-lib": {
       "type": "library",
       "root": "libs/config-lib",

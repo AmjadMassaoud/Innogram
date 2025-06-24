@@ -1,13 +1,13 @@
 import { Module } from '@nestjs/common';
 import { HttpModule, HttpModuleOptions } from '@nestjs/axios';
-import { AuthGatewayController } from '../services-controllers/auth-service/auth.gateway.controller';
+import { AuthGatewayController } from './controllers/auth.gateway.controller';
 import { ConfigService } from '@nestjs/config';
-import { AuthHttpProvider } from '../servicers-providers/auth-service/auth.http.provider';
+import { AuthHttpProvider } from './providers/auth.http.provider';
 import { ConfigLibModule } from '@app/config-lib';
 import { JwtService } from '@nestjs/jwt';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard } from '@nestjs/throttler';
-import { AuthPasswordGatewayController } from '../services-controllers/auth-service/auth-password.gateway.controller';
+import { AuthPasswordGatewayController } from './controllers/auth-password.gateway.controller';
 
 @Module({
   imports: [

@@ -18,12 +18,6 @@ export interface LoginResponse {
   setCookieHeader?: string;
 }
 
-export interface TokenVerificationResponse {
-  isValid: boolean;
-  message: string;
-  error?: string;
-}
-
 export interface GoogleAuthResponse {
   message: string;
   accessToken?: string;

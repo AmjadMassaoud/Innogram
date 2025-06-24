@@ -7,18 +7,15 @@ import {
   Res,
   UnauthorizedException,
 } from '@nestjs/common';
-import {
-  UserLoginDTO,
-  UserRegistrationDTO,
-} from '../../services-dtos/auth-dto/auth.dto';
+import { UserLoginDto, UserRegistrationDto } from '../dtos/auth.dto';
 import {
   GoogleAuthResponse,
   LoginResponse,
   SignupResponse,
-} from '../../services-interfaces/auth.interfaces';
-import { AuthHttpProvider } from '../../servicers-providers/auth-service/auth.http.provider';
-import { VerifyAccessTokenGuard } from '../../utils/guards/verify-access-token.guard';
-import { PublicRoute } from '../../utils/custom-decorators/public-route.decorator';
+} from '../interfaces/auth.interfaces';
+import { AuthHttpProvider } from '../providers/auth.http.provider';
+import { VerifyAccessTokenGuard } from '../../common/guards/verify-access-token.guard';
+import { PublicRoute } from '../../common/decorators/public-route.decorator';
 import type { Request, Response } from 'express';
 import { ApiCreatedResponse } from '@nestjs/swagger';
 
@@ -33,7 +30,7 @@ export class AuthGatewayController {
     description: 'Returns a signup response if successful',
   })
   async registerUser(
-    @Body() userCredentials: UserRegistrationDTO,
+    @Body() userCredentials: UserRegistrationDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<SignupResponse> {
     try {
@@ -61,7 +58,7 @@ export class AuthGatewayController {
     description: 'Returns a login response if successful',
   })
   async loginUser(
-    @Body() userCredentials: UserLoginDTO,
+    @Body() userCredentials: UserLoginDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<LoginResponse> {
     const { accessToken, setCookieHeader, user } =

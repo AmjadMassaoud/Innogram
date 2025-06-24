@@ -1,17 +1,16 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { catchError, firstValueFrom } from 'rxjs';
-import { AxiosError } from 'axios';
 import {
-  RequestPasswordResetDTO,
-  UserLoginDTO,
-  UserRegistrationDTO,
-} from '../../services-dtos/auth-dto/auth.dto';
+  RequestPasswordResetDto,
+  UserLoginDto,
+  UserRegistrationDto,
+} from '../dtos/auth.dto';
 import {
   GoogleAuthResponse,
   LoginResponse,
   SignupResponse,
-} from '../../services-interfaces/auth.interfaces';
+} from '../interfaces/auth.interfaces';
 import { handleAxiosError } from '../../utils/axios/axios.error.util';
 
 @Injectable()
@@ -19,7 +18,7 @@ export class AuthHttpProvider {
   constructor(private readonly httpService: HttpService) {}
 
   async registerUser(
-    userCredentials: UserRegistrationDTO,
+    userCredentials: UserRegistrationDto,
   ): Promise<SignupResponse> {
     const { data } = await firstValueFrom(
       this.httpService
@@ -29,7 +28,7 @@ export class AuthHttpProvider {
     return data;
   }
 
-  async loginUser(userCredentials: UserLoginDTO): Promise<LoginResponse> {
+  async loginUser(userCredentials: UserLoginDto): Promise<LoginResponse> {
     const { data, headers } = await firstValueFrom(
       this.httpService
         .post<LoginResponse>('/auth/login', userCredentials)
@@ -84,7 +83,7 @@ export class AuthHttpProvider {
     return data;
   }
 
-  async requestPasswordReset(emailDto: any): Promise<RequestPasswordResetDTO> {
+  async requestPasswordReset(emailDto: any): Promise<RequestPasswordResetDto> {
     const { data } = await firstValueFrom(
       this.httpService
         .post<any>('/password/request-reset', emailDto)
