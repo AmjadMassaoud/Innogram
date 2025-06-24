@@ -1,7 +1,7 @@
 import {
-  Injectable,
   CanActivate,
   ExecutionContext,
+  Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -34,8 +34,7 @@ export class VerifyAccessTokenGuard implements CanActivate {
     const token = authHeader.split(' ')[1];
 
     try {
-      const payload = await this.jwtService.verifyAsync(token);
-      request.user = payload;
+      request.user = await this.jwtService.verifyAsync(token);
       return true;
     } catch (error: any) {
       if (error.name === 'TokenExpiredError') {
