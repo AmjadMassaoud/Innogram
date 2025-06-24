@@ -1,0 +1,51 @@
+services:
+  api-gateway:
+    container_name: api-gateway
+    build:
+      context: .
+      dockerfile: apps/api-gateway/Dockerfile
+      args:
+        APP_NAME: api-gateway
+    command: npm run start:prod:api-gateway
+    ports:
+      - '3002:3002'
+    depends_on:
+      - auth-service
+
+  auth-service:
+    container_name: auth-service
+    build:
+      context: .
+      dockerfile: apps/auth-service/Dockerfile
+      args:
+        APP_NAME: auth-service
+    ports:
+      - '4000:4000'
+    depends_on:
+      - mongodb
+      - redis
+
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - '27017:27017'
+    volumes:
+      - ./mongo-data:/data/db
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - '6379:6379'
+    volumes:
+      - ./redis-data:/data
+
+volumes:
+  mongo-data:
+  redis-data:
+
+networks:
+  default:
+    name: innogram-net
+    driver: bridge
+    external: true
