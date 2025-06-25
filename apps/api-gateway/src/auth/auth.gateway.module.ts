@@ -15,25 +15,17 @@ import { AuthPasswordGatewayController } from './controllers/auth-password.gatew
       imports: [ConfigLibModule],
       useFactory: async (
         configService: ConfigService,
-      ): Promise<HttpModuleOptions> => {
-        const internalApiSecret = configService.get<string>(
-          'INTERNAL_API_SECRET',
-        );
-        if (!internalApiSecret) {
-          throw new Error(
-            'INTERNAL_API_SECRET is not defined in environment variables',
-          );
-        }
-        return {
-          timeout: 5000,
-          maxRedirects: 3,
-          baseURL: configService.get<string>('AUTH_SERVICE_BASEURL'),
-          headers: {
-            'x-internal-api-secret': internalApiSecret,
-            'Content-Type': 'application/json',
-          },
-        };
-      },
+      ): Promise<HttpModuleOptions> => ({
+        timeout: 5000,
+        maxRedirects: 3,
+        baseURL: configService.get<string>('AUTH_SERVICE_BASEURL'),
+        headers: {
+          'x-internal-api-secret': configService.get<string>(
+            'INTERNAL_API_SECRET',
+          ),
+          'Content-Type': 'application/json',
+        },
+      }),
       inject: [ConfigService],
     }),
   ],
