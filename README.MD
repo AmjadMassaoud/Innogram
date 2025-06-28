@@ -32,115 +32,31 @@ Innogram/
 
 ---
 
-## Setting up MongoDB and Redis Locally on Docker
+## Running Innogram on Docker
 
-### MongoDB
+1. Install docker:
+2. At the root of the project, run the following command:
+   ```bash
+   docker-compose up --build
+   ```
+   This would be enough to run build and run all containers.
 
-You can run MongoDB locally using Docker:
+#### Ensure all containers are on the same network: if any problem occurred**
 
-```bash
-  docker run -d --name mongo -p 27017:27017 --network innogram-net mongo:latest
-```
+All services (auth-service, MongoDB, Redis, etc.) must be attached to the same Docker network named `innogram-net`.  
+If the network does not exist, create it with:
 
-Or install MongoDB Community Edition from [mongodb.com](https://www.mongodb.com/try/download/community) and start the
-service:
+   ```bash
+      docker network create innogram-net
+  ````
 
-```bash
-  mongod  
-```
+#### Running containers with variables
 
-By default, the services expect MongoDB to be available at `mongodb://localhost:27017`.
-
-### Redis
-
-You can run Redis locally using Docker:
-
-```bash
-  docker run -d --name redis -p 6379:6379 --network innogram-net redis:latest
-```
-
-Or install Redis from [redis.io](https://redis.io/download) and start the service:
-
-```bash
-  redis-server
-```
-
-By default, the services expect Redis to be available at `redis://localhost:6379`.
-
----
-
-## Local Development
-
-### 1. Install Dependencies
-
-From the project root:
-
-```bash
-  npm install
-```
-
-### 2. Build the Project
-
-```bash
-  npm run build
-```
-
-### 3. Start Services Individually
-
-Each service can be started from its directory:
-
-#### API Gateway
-
-```bash
-  npm install
-  npm run start:dev:api-gateway
-```
-
-#### Auth Service
-
-```bash
-    npm install
-    npm run start:dev:auth-service
-```
-
-### 4. Start All Services (Monorepo)
-
-From the root, you can use:
-
-```bash
-  npm run start:dev
-```
-
-This will start all services in development mode
-
----
-
-## Running with Docker
-
-### 1. Build and Start All Services
-
-From the project root:
-
-```bash
-    docker-compose --build
-```
-
-This will build and start all services as defined in `docker-compose.yml`.
-
-### 2. Stopping Services
-
-```bash
-    docker-compose down
-```
-
----
-
-## Useful Commands
-
-- **Build all:** `npm run build`
-- **Start all (dev):** `npm run start:dev`
-
----
+1. You could write environment variables in docker-compose.
+2. You can also run your container with env files with the following command:
+   ```bash
+      docker run --name container-name --env-file ./apps/auth-service/.env.example -p 3002:3002 --network innogram-net auth-service-image-name
+   ```
 
 ## Notes
 

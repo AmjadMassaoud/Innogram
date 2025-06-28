@@ -9,6 +9,8 @@ services:
     command: npm run start:prod:api-gateway
     ports:
       - '3002:3002'
+    env_file:
+      - './apps/api-gateway/.env.development'
     depends_on:
       - auth-service
 
@@ -21,6 +23,8 @@ services:
         APP_NAME: auth-service
     ports:
       - '4000:4000'
+    env_file:
+      - './apps/auth-service/.env'
     depends_on:
       - mongodb
       - redis

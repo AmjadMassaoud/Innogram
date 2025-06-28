@@ -52,8 +52,9 @@ purposes.
 1. Install docker:
 2. At the root of the project, run the following command:
    ```bash
-   docker-compose build
+   docker-compose up --build
    ```
+   This would be enough to run build and run all containers.
 
 #### Ensure all containers are on the same network:**
 
