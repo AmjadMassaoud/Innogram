@@ -9,7 +9,7 @@ const verifyInternalReq = (req: Request, res: any, next: NextFunction) => {
     !internalApiSecret ||
     internalApiSecret !== config.internalApiSecret.internal_api_secret
   ) {
-    throw new InternalApiSecretError();
+    return next(new InternalApiSecretError());
   }
 
   next();

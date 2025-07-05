@@ -13,6 +13,8 @@ services:
       - './apps/api-gateway/.env.development'
     depends_on:
       - auth-service
+    environment:
+      - NODE_ENV=production
 
   auth-service:
     container_name: auth-service
@@ -28,6 +30,8 @@ services:
     depends_on:
       - mongodb
       - redis
+    environment:
+      - NODE_ENV=production
 
   mongodb:
     image: mongo:latest

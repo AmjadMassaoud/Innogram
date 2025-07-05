@@ -8,6 +8,7 @@ import config from './configs/config';
 import verifyInternalReq from './middlewares/verify-internal-request.middleware';
 import swaggerUi from 'swagger-ui-express';
 import swaggerSpec from './swagger';
+import { catchErrors } from './middlewares/catch-errors.middleware';
 
 const app = express();
 
@@ -20,11 +21,11 @@ app.use(cookieParser());
 
 app.use(
   cors({
-    origin: !config.cors.cors_origin,
-    methods: ['GET', 'POST'],
+    origin: config.cors.cors_origin,
+    methods: ['GET', 'POST', 'DELETE', 'UPDATE', 'PUT', 'PATCH'],
     credentials: true,
     optionsSuccessStatus: 200,
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-internal-api-secret'],
     preflightContinue: false,
   }),
 );
@@ -32,9 +33,9 @@ app.use(
 app.use(corsErrorHandler);
 app.use(verifyInternalReq);
 
-app.use(express.json());
+app.use('/innogram/v1/auth', authController);
+app.use('/innogram/v1/passwords', passwordController);
 
-app.use('/innogram/auth', authController);
-app.use('/innogram/password', passwordController);
+app.use(catchErrors);
 
 export default app;

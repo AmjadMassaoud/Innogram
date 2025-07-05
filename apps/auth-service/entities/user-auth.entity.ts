@@ -23,6 +23,9 @@ export class UserAuthEntity extends BaseEntity {
   @Column({ type: 'string', nullable: true })
   googleUserId!: string;
 
+  @Column({ type: 'string', nullable: true })
+  googleRefreshToken?: string;
+
   @Column({ type: 'string', default: ERegistrationMethod.EMAIL })
   registrationMethod!: ERegistrationMethod;
 

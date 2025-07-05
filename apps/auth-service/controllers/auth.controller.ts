@@ -5,8 +5,6 @@ import {
   handleLogout,
   handleRefreshToken,
 } from '../services/auth.service';
-import { refreshTokenCookieConfig } from '../configs/cookie.config';
-
 import { handleGoogleAuthCallback } from '../services/google.auth.service';
 import {
   loginSchema,
@@ -22,7 +20,7 @@ const authController = Router();
 
 /**
  * @openapi
- * /innogram/auth/login:
+ * /innogram/v1/auth/tokens:
  *   post:
  *     tags:
  *       - Authentication
@@ -61,7 +59,7 @@ const authController = Router();
  *           Set-Cookie:
  *             schema:
  *               type: string
- *               example: jid=yourRefreshToken; Path=/innogram/auth; HttpOnly; SameSite=Lax
+ *               example: jid=yourRefreshToken; Path=/; HttpOnly; SameSite=Lax
  *         content:
  *           application/json:
  *             schema:
@@ -87,34 +85,22 @@ const authController = Router();
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "email is required"
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       401:
  *         description: Unauthorized - Invalid credentials or user not found
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Invalid password" # or "User not found"
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       500:
  *         description: Internal Server Error
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "An internal server error occurred during login."
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 authController.post(
-  '/login',
+  '/tokens',
   validateBody(loginSchema),
   async (req: Request, res: Response) => {
     const { refreshToken, accessToken, user } = await handleLogin(req.body);
@@ -137,7 +123,7 @@ authController.post(
 
 /**
  * @openapi
- * /innogram/auth/signup:
+ * /innogram/v1/auth/users:
  *   post:
  *     tags:
  *       - Authentication
@@ -181,7 +167,7 @@ authController.post(
  *           Set-Cookie:
  *             schema:
  *               type: string
- *               example: jid=yourRefreshToken; Path=/innogram/auth; HttpOnly; SameSite=Lax; Secure
+ *               example: jid=yourRefreshToken; Path=/; HttpOnly; SameSite=Lax; Secure
  *         content:
  *           application/json:
  *             schema:
@@ -213,7 +199,7 @@ authController.post(
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ErrorResponse' # Note: Currently, provider might let this bubble up as a 500 from controller.
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       500:
  *         description: Internal Server Error
  *         content:
@@ -222,7 +208,7 @@ authController.post(
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 authController.post(
-  '/signup',
+  '/users',
   validateBody(signupSchema),
   async (req: Request, res: Response) => {
     const { accessToken, refreshToken, user } = await handleSignUp(req.body);
@@ -246,8 +232,8 @@ authController.post(
 
 /**
  * @openapi
- * /innogram/auth/logout:
- *   post:
+ * /innogram/v1/auth/tokens:
+ *   delete:
  *     tags:
  *       - Authentication
  *     summary: Logs out a user
@@ -273,7 +259,7 @@ authController.post(
  *           Set-Cookie:
  *             schema:
  *               type: string
- *               example: jid=; Path=/innogram/auth; Expires=Thu, 01 Jan 1970 00:00:00 GMT
+ *               example: jid=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT
  *         content:
  *           application/json:
  *             schema:
@@ -290,8 +276,12 @@ authController.post(
  *               $ref: '#/components/schemas/ErrorResponse'
  *       500:
  *         description: Internal Server Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
-authController.post('/logout', async (req: Request, res: Response) => {
+authController.delete('/tokens', async (req: Request, res: Response) => {
   const token = req.cookies.jid as string;
   if (!token) {
     throw new NoTokenProvidedError();
@@ -308,7 +298,7 @@ authController.post('/logout', async (req: Request, res: Response) => {
 
 /**
  * @openapi
- * /innogram/auth/refresh-token:
+ * /innogram/v1/auth/tokens/refresh:
  *   post:
  *     tags:
  *       - Authentication
@@ -335,7 +325,7 @@ authController.post('/logout', async (req: Request, res: Response) => {
  *           Set-Cookie:
  *             schema:
  *               type: string
- *               example: jid=newRefreshToken; Path=/innogram/auth; HttpOnly; SameSite=Lax; Secure
+ *               example: jid=newRefreshToken; Path=/; HttpOnly; SameSite=Lax; Secure
  *         content:
  *           application/json:
  *             schema:
@@ -349,7 +339,7 @@ authController.post('/logout', async (req: Request, res: Response) => {
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ErrorResponse' # Note: Provider might let some token errors bubble up as 500 from controller.
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       500:
  *         description: Internal Server Error
  *         content:
@@ -357,7 +347,7 @@ authController.post('/logout', async (req: Request, res: Response) => {
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-authController.post('/refresh-token', async (req: Request, res: Response) => {
+authController.post('/tokens/refresh', async (req: Request, res: Response) => {
   const token = req.cookies.jid as string;
 
   if (!token) {
@@ -378,8 +368,8 @@ authController.post('/refresh-token', async (req: Request, res: Response) => {
 
 /**
  * @openapi
- * /innogram/auth/google-callback:
- *   get:
+ * /innogram/v1/auth/google:
+ *   post:
  *     tags:
  *       - Authentication
  *       - Google OAuth
@@ -437,11 +427,20 @@ authController.post('/refresh-token', async (req: Request, res: Response) => {
  *               $ref: '#/components/schemas/ErrorResponse'
  *       401:
  *         description: Unauthorized - Google authentication failed (e.g., invalid code, token verification issue).
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       500:
  *         description: Internal Server Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
-authController.post('/google-callback', async (req: Request, res: Response) => {
+authController.post('/google', async (req: Request, res: Response) => {
   const code: string = req.query.code as string;
+
   if (!code) {
     res
       .status(httpStatus.BAD_REQUEST)
@@ -450,32 +449,18 @@ authController.post('/google-callback', async (req: Request, res: Response) => {
   }
 
   const { newRefreshToken, message, accessToken, user } =
-    await handleGoogleAuthCallback(code);
+    await handleGoogleAuthCallback(code.trim());
 
   if (newRefreshToken) {
-    res.cookie('jid', newRefreshToken, {
-      ...refreshTokenCookieConfig,
-      path: '/',
-    });
+    res.cookie('jid', newRefreshToken);
   }
 
   res.status(httpStatus.OK).json({
+    newRefreshToken,
     message,
     accessToken,
     ...user,
   });
 });
-
-/**
- * @openapi
- * components:
- *   schemas:
- *     ErrorResponse:
- *       type: object
- *       properties:
- *         error:
- *           type: string
- *           example: "Specific error message detailing what went wrong."
- */
 
 export default authController;

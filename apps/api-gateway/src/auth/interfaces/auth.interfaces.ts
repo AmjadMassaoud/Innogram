@@ -19,6 +19,7 @@ export interface LoginResponse {
 }
 
 export interface GoogleAuthResponse {
+  newRefreshToken?: string;
   message: string;
   accessToken?: string;
   user?: {

@@ -8,7 +8,7 @@ import {
 } from './token.service';
 
 import { UserAuthEntity } from '../entities/user-auth.entity';
-import { hashPassword, verifyPassword } from '../utils/password.util'; // Adjust path if needed
+import { hashPassword, verifyPassword } from '../utils/password.util';
 import {
   AuthenticationError,
   InvalidCredentialsError,
@@ -23,6 +23,7 @@ import {
 } from '../common/interfaces/auth-provider-interfaces/login-value.interface';
 import { IRefreshTokenReturn } from '../common/interfaces/auth-provider-interfaces/token.interface';
 import { NoTokenProvidedError } from '../custom-errors/token.errors';
+import { ERegistrationMethod } from '../common/enums/registration-method.enum';
 
 const UserAuthRepo = dataSource.getRepository(UserAuthEntity);
 
@@ -44,6 +45,7 @@ export async function handleSignUp(
       email: email,
       password: hashedPassword,
       username,
+      registrationMethod: ERegistrationMethod.EMAIL,
     });
 
     const tokenPayload = {
@@ -181,6 +183,44 @@ export async function handleRefreshToken(
 
 export async function handleLogout(token: string): Promise<void> {
   try {
+    const payload = await verifyRefreshToken(token);
+
+    const user = await UserAuthRepo.findOneBy({ id: payload.userId });
+
+    if (
+      user &&
+      user.registrationMethod === ERegistrationMethod.GOOGLE &&
+      user.googleRefreshToken
+    ) {
+      try {
+        const params = new URLSearchParams();
+        params.append('token', user.googleRefreshToken);
+
+        const revokeResponse = await fetch(
+          'https://oauth2.googleapis.com/revoke',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: params,
+          },
+        );
+
+        if (revokeResponse.ok) {
+          user.googleRefreshToken = undefined;
+          await UserAuthRepo.save(user);
+        } else {
+          const errorBody = await revokeResponse.json();
+          throw new Error(errorBody.error_description);
+        }
+      } catch (error) {
+        if (error! instanceof InvalidCredentialsError) {
+          throw error;
+        }
+      }
+    }
+
     await invalidateRefreshToken(token);
   } catch (error) {
     throw error;

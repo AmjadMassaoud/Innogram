@@ -25,4 +25,4 @@ RUN npm install --omit=dev
 
 COPY --from=builder /usr/src/app/dist ./dist
 
-CMD [ "node", "dist/apps/Innogram/main.js" ]
+CMD [ "node", "dist/apps/innogram-backend/main.js" ]

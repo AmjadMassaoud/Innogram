@@ -2,7 +2,6 @@ import httpStatus from 'http-status';
 import {
   OAuth2Client,
   TokenPayload as GoogleTokenPayload,
-  LoginTicket,
 } from 'google-auth-library';
 
 import { UserAuthEntity } from '../entities/user-auth.entity';
@@ -21,19 +20,25 @@ import { AuthenticationError } from '../custom-errors/auth.errors';
 const oAuth2Client = new OAuth2Client(
   config.google.clientId,
   config.google.clientSecret,
-  config.google.callbackUrl,
+  'postmessage',
 );
 
-// Handles the callback from Google after user authentication.
 export const handleGoogleAuthCallback = async (
   code: string,
 ): Promise<IGoogleAuthReturnType> => {
   try {
-    // Exchange the authorization code for tokens from Google
     const { tokens } = await oAuth2Client.getToken(code);
 
-    const ticket: LoginTicket = await oAuth2Client.verifyIdToken({
-      idToken: tokens.id_token!,
+    const googleRefreshToken = tokens.refresh_token;
+
+    if (!tokens.id_token) {
+      throw new GoogleAuthVerificationError(
+        'Google did not return an ID token.',
+      );
+    }
+
+    const ticket = await oAuth2Client.verifyIdToken({
+      idToken: tokens.id_token,
       audience: config.google.clientId,
     });
 
@@ -46,62 +51,46 @@ export const handleGoogleAuthCallback = async (
     }
 
     const userEmail: string = googlePayload.email;
-    const googleUserId: string = googlePayload.sub; // Google's unique ID for the user
+    const googleUserId: string = googlePayload.sub;
     const userName: string = googlePayload.name || userEmail.split('@')[0];
 
     const userAuthRepo: Repository<UserAuthEntity> =
       dataSource.getRepository(UserAuthEntity);
 
-    let user = await userAuthRepo.findOne({
-      where: { email: userEmail },
-    });
+    let user = await userAuthRepo.findOneBy({ email: userEmail });
 
     if (!user) {
-      const passwordPlaceholder = `google_oauth_${googleUserId}`;
-
-      let primaryUserRecord = userAuthRepo.create({
+      user = userAuthRepo.create({
         email: userEmail,
-        password: passwordPlaceholder,
+        password: `google_oauth_${googleUserId}`,
         username: userName,
         registrationMethod: ERegistrationMethod.GOOGLE,
         googleUserId: googleUserId,
       });
-      primaryUserRecord = await userAuthRepo.save(primaryUserRecord);
-
-      user = await userAuthRepo.save(primaryUserRecord);
     }
 
-    // Generating app's token
+    if (googleRefreshToken) {
+      user.googleRefreshToken = googleRefreshToken;
+    }
+
     const jwtPayloadForApp = {
-      userId: user.id.toString(), // canonical user id
+      userId: user.id.toString(),
       email: user.email,
     };
 
     const accessToken = await generateAccessToken(jwtPayloadForApp);
     const newRefreshToken = await generateRefreshToken(jwtPayloadForApp);
-    const refreshTokenExpiresInMs = parseInt(
-      config.jwt.refresh_token.expire || (7 * 24 * 60 * 60 * 1000).toString(),
-    );
 
-    await userAuthRepo.update(
-      { email: user.email, googleUserId: user.googleUserId },
-      {
-        googleUserId: user.googleUserId,
-        email: user.email,
-        username: user.username,
-        password: user.password, // Carry over from USER_ACCOUNT
-        refreshToken: newRefreshToken,
-        registrationMethod: ERegistrationMethod.GOOGLE,
-        expiresAt: new Date(Date.now() + refreshTokenExpiresInMs),
-      },
-    );
+    user.refreshToken = newRefreshToken;
+
+    await userAuthRepo.save(user);
 
     return {
-      newRefreshToken,
       message: 'Google authentication successful',
+      newRefreshToken,
       accessToken,
       user: {
-        id: user.googleUserId,
+        id: user.id.toString(),
         email: user.email,
         username: user.username,
       },

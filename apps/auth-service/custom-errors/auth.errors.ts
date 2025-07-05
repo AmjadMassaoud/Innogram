@@ -40,8 +40,8 @@ export class UserNotFoundError extends AuthenticationError {
  * Error thrown when attempting to create a user that already exists.
  */
 export class UserAlreadyExistsError extends AuthenticationError {
-  constructor(message: string = 'User with this email already exists') {
-    super(message, 409); // 409 Conflict is a suitable status code
+  constructor(message: string = 'Incorrect credentials') {
+    super(message, 409);
     this.name = 'UserAlreadyExistsError';
     Object.setPrototypeOf(this, UserAlreadyExistsError.prototype);
   }

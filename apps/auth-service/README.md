@@ -26,19 +26,19 @@ management, and OAuth integration.
 
 ### Authentication
 
-- `POST /innogram/auth/signup` — Register new user
-- `POST /innogram/auth/login` — User login
-- `POST /innogram/auth/logout` — User logout
-- `POST /innogram/auth/refresh-token` — Refresh access token
+- `POST /innogram/v1/auth/users` — Register new user
+- `POST /innogram/v1/auth/tokens` — User login
+- `POST /innogram/v1/auth/tokens` — User logout
+- `POST /innogram/v1/auth/tokens/refresh` — Refresh access token
 
 ### Google OAuth
 
-- `GET /innogram/auth/google-callback` — Google OAuth callback handler
+- `GET /innogram/v1/auth/google` — Google OAuth callback handler
 
 ### Password Management
 
-- `POST /innogram/password/request-reset` — Request password reset
-- `POST /innogram/password/reset` — Reset password with token
+- `POST /innogram/v1/passwords` — Request password reset
+- `POST /innogram/v1/passwords` — Reset password with token
 
 ## Project Structure
 

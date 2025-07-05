@@ -1,16 +1,16 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Patch, Post } from '@nestjs/common';
 import { PublicRoute } from '../../common/decorators/public-route.decorator';
 import { AuthHttpProvider } from '../providers/auth.http.provider';
 import { RequestPasswordResetDto, ResetPasswordDto } from '../dtos/auth.dto';
 import { ApiCreatedResponse } from '@nestjs/swagger';
 import { RequestPasswordResetResponse } from '../interfaces/auth.interfaces';
 
-@Controller('api-gateway/password')
+@Controller('api-gateway/v1/passwords')
 export class AuthPasswordGatewayController {
   constructor(private readonly authHttpProvider: AuthHttpProvider) {}
 
   @PublicRoute()
-  @Post('request-password-reset')
+  @Post()
   @ApiCreatedResponse({
     description:
       'Requests Auth-service to send a password reset token to be used with Email-service',
@@ -21,7 +21,7 @@ export class AuthPasswordGatewayController {
   }
 
   @PublicRoute()
-  @Post('reset-password')
+  @Patch()
   @ApiCreatedResponse({
     description: 'Returns a successful message.',
   })

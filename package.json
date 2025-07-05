@@ -20,7 +20,7 @@
     "start:dev:all": "concurrently \"npm run start:dev:user-service\" \"npm run start:dev:api-gateway\" \"npm run start:dev:auth-service\"",
     "start:debug": "cross-env NODE_ENV=development nest start --debug --watch",
     "start:prod": "node dist/main",
-    "start:prod:api-gateway": "NODE_ENV=production node dist/apps/Innogram/main",
+    "start:prod:api-gateway": "NODE_ENV=production node dist/apps/innogram-backend/main",
     "start:prod:user-service": "cross-env NODE_ENV=production node dist/apps/user-service/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "cross-env NODE_ENV=test jest",

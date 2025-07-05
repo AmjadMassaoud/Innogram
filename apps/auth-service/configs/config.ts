@@ -29,7 +29,6 @@ const envSchema = Joi.object().keys({
 
   GOOGLE_CLIENT_ID: Joi.string().required(),
   GOOGLE_CLIENT_SECRET: Joi.string().required(),
-  GOOGLE_CALLBACK_URL: Joi.string().required(),
 });
 
 const { value: validatedEnv, error } = envSchema
@@ -81,7 +80,6 @@ const config = {
   google: {
     clientId: validatedEnv.GOOGLE_CLIENT_ID,
     clientSecret: validatedEnv.GOOGLE_CLIENT_SECRET,
-    callbackUrl: validatedEnv.GOOGLE_CALLBACK_URL,
   },
 } as const;
 

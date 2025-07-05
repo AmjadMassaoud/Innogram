@@ -11,7 +11,7 @@
     ]
   },
   "monorepo": true,
-  "root": "apps/Innogram",
+  "root": "apps/innogram-backend",
   "projects": {
     "api-gateway": {
       "type": "application",

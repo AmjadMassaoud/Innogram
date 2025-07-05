@@ -6,6 +6,7 @@ import {
   Req,
   Res,
   UnauthorizedException,
+  Delete,
 } from '@nestjs/common';
 import { UserLoginDto, UserRegistrationDto } from '../dtos/auth.dto';
 import {
@@ -19,12 +20,12 @@ import { PublicRoute } from '../../common/decorators/public-route.decorator';
 import type { Request, Response } from 'express';
 import { ApiCreatedResponse } from '@nestjs/swagger';
 
-@Controller('api-gateway/auth')
+@Controller('api-gateway/v1/auth')
 export class AuthGatewayController {
   constructor(private readonly authHttpProvider: AuthHttpProvider) {}
 
   @PublicRoute()
-  @Post('register')
+  @Post('users')
   @UseGuards(VerifyAccessTokenGuard)
   @ApiCreatedResponse({
     description: 'Returns a signup response if successful',
@@ -53,7 +54,7 @@ export class AuthGatewayController {
   }
 
   @PublicRoute()
-  @Post('login')
+  @Post('tokens')
   @ApiCreatedResponse({
     description: 'Returns a login response if successful',
   })
@@ -71,7 +72,7 @@ export class AuthGatewayController {
     return { accessToken, user };
   }
 
-  @Post('logout')
+  @Delete('tokens')
   @ApiCreatedResponse({
     description: 'Logs user out if successful with cookie removal',
   })
@@ -103,7 +104,7 @@ export class AuthGatewayController {
     }
   }
 
-  @Post('refresh-token')
+  @Post('tokens/refresh')
   @ApiCreatedResponse({
     description: 'Returns a new access token if successful',
   })
@@ -136,13 +137,13 @@ export class AuthGatewayController {
   }
 
   @PublicRoute()
-  @Post('google-callback')
+  @Post('google')
   @ApiCreatedResponse({
     description: 'Returns a login response if successful',
   })
   async googleCallback(
     @Req() req: Request,
-    @Res() res: Response,
+    @Res({ passthrough: true }) res: Response,
   ): Promise<GoogleAuthResponse> {
     const code = req.query.code as string;
 
@@ -150,10 +151,17 @@ export class AuthGatewayController {
       const data = await this.authHttpProvider.googleCallback(code);
 
       if (data) {
-        res.setHeader('set-cookie', data.accessToken!);
+        res.cookie('jid', data.newRefreshToken!, {
+          httpOnly: true,
+          path: '/',
+          sameSite: 'lax',
+          secure: true,
+        });
       }
 
-      return data;
+      const { newRefreshToken, ...rest } = data;
+
+      return rest;
     } catch (error) {
       throw error;
     }

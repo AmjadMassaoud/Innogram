@@ -14,7 +14,7 @@ const router = Router();
 
 /**
  * @openapi
- * /innogram/password/request-reset:
+ * /innogram/v1/passwords:
  *   post:
  *     tags:
  *       - Password Management
@@ -79,7 +79,7 @@ const router = Router();
  *         description: Internal Server Error - Could not process password reset request.
  */
 router.post(
-  '/request-reset',
+  '/',
   validateBody(requestPasswordResetSchema),
   async (req: Request, res: Response) => {
     const { email } = req.body;
@@ -97,8 +97,8 @@ router.post(
 
 /**
  * @openapi
- * /innogram/password/reset:
- *   post:
+ * /innogram/v1/passwords:
+ *   patch:
  *     tags:
  *       - Password Management
  *     summary: Resets user password using a token
@@ -157,8 +157,8 @@ router.post(
  *       500:
  *         description: Internal Server Error - An error occurred during password reset.
  */
-router.post(
-  '/reset',
+router.patch(
+  '/',
   validateBody(passwordResetSchema),
   async (req: Request, res: Response) => {
     try {

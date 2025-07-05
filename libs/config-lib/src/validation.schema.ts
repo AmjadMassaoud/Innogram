@@ -9,7 +9,7 @@ export const validationSchema = Joi.object({
   PORT: Joi.number().required(),
   MICROSERVICE_PORT: Joi.number().optional(),
 
-  AUTH_SERVICE_BASEURL: Joi.string().required(),
+  AUTH_SERVICE_BASE_URL: Joi.string().required(),
 
   DATABASE_HOST: Joi.string().optional(),
   DATABASE_PORT: Joi.number().optional().default(5432),

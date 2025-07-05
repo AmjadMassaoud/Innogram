@@ -21,7 +21,7 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 COPY apps/auth-service/package.json ./apps/auth-service/
 
-RUN npm install
+RUN npm install --omit=dev
 
 COPY --from=builder /usr/src/app/apps/auth-service/dist ./dist
 

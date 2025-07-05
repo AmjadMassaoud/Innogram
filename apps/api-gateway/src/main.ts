@@ -2,9 +2,17 @@ import { NestFactory } from '@nestjs/core';
 import { ApiGatewayModule } from './api-gateway.module';
 import cookieParser from 'cookie-parser';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
   const app = await NestFactory.create(ApiGatewayModule);
+
+  const configService = app.get(ConfigService);
+
+  app.enableCors({
+    origin: configService.get<string>('FRONTEND_URL_ORIGIN'),
+    credentials: true,
+  });
 
   app.use(cookieParser());
 

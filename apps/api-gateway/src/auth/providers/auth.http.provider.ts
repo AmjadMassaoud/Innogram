@@ -22,7 +22,7 @@ export class AuthHttpProvider {
   ): Promise<SignupResponse> {
     const { data } = await firstValueFrom(
       this.httpService
-        .post<SignupResponse>('/auth/signup', userCredentials)
+        .post<SignupResponse>('/v1/auth/users', userCredentials)
         .pipe(catchError(handleAxiosError)),
     );
     return data;
@@ -31,7 +31,7 @@ export class AuthHttpProvider {
   async loginUser(userCredentials: UserLoginDto): Promise<LoginResponse> {
     const { data, headers } = await firstValueFrom(
       this.httpService
-        .post<LoginResponse>('/auth/login', userCredentials)
+        .post<LoginResponse>('/v1/auth/tokens', userCredentials)
         .pipe(catchError(handleAxiosError)),
     );
 
@@ -47,13 +47,9 @@ export class AuthHttpProvider {
   async logoutUser(cookieJID: string): Promise<{ message: string }> {
     const { data } = await firstValueFrom(
       this.httpService
-        .post<{ message: string }>(
-          '/auth/logout',
-          {},
-          {
-            headers: { Cookie: `jid=${cookieJID}` },
-          },
-        )
+        .delete<{ message: string }>('/v1/auth/tokens', {
+          headers: { Cookie: `jid=${cookieJID}` },
+        })
         .pipe(catchError(handleAxiosError)),
     );
     return data;
@@ -63,7 +59,7 @@ export class AuthHttpProvider {
     const { data } = await firstValueFrom(
       this.httpService
         .post<{ accessToken: string }>(
-          '/auth/refresh-token',
+          '/v1/auth/tokens/refresh',
           {},
           {
             headers: { Cookie: `jid=${cookieJID}` },
@@ -75,18 +71,21 @@ export class AuthHttpProvider {
   }
 
   async googleCallback(code: string): Promise<GoogleAuthResponse> {
-    const { data } = await firstValueFrom(
+    const { data, headers } = await firstValueFrom(
       this.httpService
-        .get<any>('/auth/google-callback', { params: { code } })
+        .post<any>('/v1/auth/google', {}, { params: { code } })
         .pipe(catchError(handleAxiosError)),
     );
-    return data;
+
+    const setCookieHeader = headers['jid']?.at(0);
+
+    return { ...data, setCookieHeader };
   }
 
   async requestPasswordReset(emailDto: any): Promise<RequestPasswordResetDto> {
     const { data } = await firstValueFrom(
       this.httpService
-        .post<any>('/password/request-reset', emailDto)
+        .post<any>('/v1/passwords', emailDto)
         .pipe(catchError(handleAxiosError)),
     );
     return data;
@@ -95,7 +94,7 @@ export class AuthHttpProvider {
   async resetUserPassword(userCredentials: any): Promise<{ message: string }> {
     const { data } = await firstValueFrom(
       this.httpService
-        .post('/password/reset', userCredentials)
+        .patch('/v1/passwords', userCredentials)
         .pipe(catchError(handleAxiosError)),
     );
     return { message: data.message };

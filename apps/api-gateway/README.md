@@ -87,6 +87,8 @@ directory by copying the `.env.example` file.
 This section documents the endpoints exposed by the API Gateway. The gateway forwards these requests to the appropriate
 downstream microservice.
 
+On swagger it will be on `http://localhost:3002/api-gateway/api`
+
 ### Authentication Service
 
 Handles all user authentication, session management, and password-related functionality.
@@ -94,23 +96,23 @@ Handles all user authentication, session management, and password-related functi
 - **Base Path:** `/api-gateway/auth`
 - **Downstream Service:** `auth-service`
 
-| Method | Endpoint           | Description                                                              | Protection |
-|:-------|:-------------------|:-------------------------------------------------------------------------|:-----------|
-| `POST` | `/register`        | Registers a new user.                                                    | Public     |
-| `POST` | `/login`           | Logs in a user and returns an `accessToken` and a `refreshToken` cookie. | Public     |
-| `POST` | `/logout`          | Logs out a user by invalidating their refresh token.                     | Protected  |
-| `POST` | `/refresh-token`   | Issues a new `accessToken` using a valid refresh token cookie.           | Protected  |
-| `POST` | `/google-callback` | Handles the callback from Google OAuth2 flow.                            | Public     |
+| Method  | Endpoint          | Description                                                              | Protection |
+|:--------|:------------------|:-------------------------------------------------------------------------|:-----------|
+| `POST`  | `/users`          | Registers a new user.                                                    | Public     |
+| `POST`  | `/tokens`         | Logs in a user and returns an `accessToken` and a `refreshToken` cookie. | Public     |
+| `DELETE` | `/tokens`         | Logs out a user by invalidating their refresh token.                     | Protected  |
+| `POST`  | `/tokens/refresh` | Issues a new `accessToken` using a valid refresh token cookie.           | Protected  |
+| `POST`  | `/google`         | Handles the callback from Google OAuth2 flow.                            | Public     |
 
 ---
 
-- **Base Path:** `/api-gateway/password`
+- **Base Path:** `/api-gateway/v1/passwords`
 - **Downstream Service:** `auth-service`
 
-| Method | Endpoint                  | Description                                                                  | Protection |
-|:-------|:--------------------------|:-----------------------------------------------------------------------------|:-----------|
-| `POST` | `/request-password-reset` | Initiates the password reset process by sending a token to the user's email. | Public     |
-| `POST` | `/reset-password`         | Resets the user's password using a valid reset token.                        | Public     |
+| Method  | Endpoint  | Description                                                                  | Protection |
+|:--------|:----------|:-----------------------------------------------------------------------------|:-----------|
+| `POST`  | `/tokens` | Initiates the password reset process by sending a token to the user's email. | Public     |
+| `PATCH` | `/tokens` | Resets user's password using a valid reset token.                            | Public     |
 
 ---
 

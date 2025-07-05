@@ -18,7 +18,7 @@ import { AuthPasswordGatewayController } from './controllers/auth-password.gatew
       ): Promise<HttpModuleOptions> => ({
         timeout: 5000,
         maxRedirects: 3,
-        baseURL: configService.get<string>('AUTH_SERVICE_BASEURL'),
+        baseURL: configService.get<string>('AUTH_SERVICE_BASE_URL'),
         headers: {
           'x-internal-api-secret': configService.get<string>(
             'INTERNAL_API_SECRET',
