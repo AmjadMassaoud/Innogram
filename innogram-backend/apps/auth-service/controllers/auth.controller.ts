@@ -1,20 +1,20 @@
-import { Router } from 'express';
+import { Router } from "express";
 import {
   handleLogin,
   handleSignUp,
   handleLogout,
   handleRefreshToken,
-} from '../services/auth.service';
-import { handleGoogleAuthCallback } from '../services/google.auth.service';
+} from "../services/auth.service";
+import { handleGoogleAuthCallback } from "../services/google.auth.service";
 import {
   loginSchema,
   signupSchema,
-} from '../common/schema-validations/auth.validation';
-import httpStatus from 'http-status';
-import config from '../configs/config';
-import type { Request, Response } from 'express';
-import { NoTokenProvidedError } from '../custom-errors/token.errors';
-import { validateBody } from '../middlewares/validate-body.middleware';
+} from "../common/schema-validations/auth.validation";
+import httpStatus from "http-status";
+import config from "../configs/config";
+import type { Request, Response } from "express";
+import { NoTokenProvidedError } from "../custom-errors/token.errors";
+import { validateBody } from "../middlewares/validate-body.middleware";
 
 const authController = Router();
 
@@ -100,16 +100,16 @@ const authController = Router();
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 authController.post(
-  '/tokens',
+  "/tokens",
   validateBody(loginSchema),
   async (req: Request, res: Response) => {
     const { refreshToken, accessToken, user } = await handleLogin(req.body);
 
-    res.cookie('jid', refreshToken, {
+    res.cookie("jid", refreshToken, {
       httpOnly: true,
-      path: '/',
-      sameSite: 'lax',
-      secure: config.node_env === 'production',
+      path: "/",
+      sameSite: "lax",
+      secure: config.node_env === "production",
     });
 
     res.json({
@@ -208,16 +208,16 @@ authController.post(
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 authController.post(
-  '/users',
+  "/users",
   validateBody(signupSchema),
   async (req: Request, res: Response) => {
     const { accessToken, refreshToken, user } = await handleSignUp(req.body);
 
-    res.cookie('jid', refreshToken, {
+    res.cookie("jid", refreshToken, {
       httpOnly: true,
-      path: '/',
-      sameSite: 'lax',
-      secure: config.node_env === 'production',
+      path: "/",
+      sameSite: "lax",
+      secure: config.node_env === "production",
     });
 
     res.json({
@@ -281,7 +281,7 @@ authController.post(
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-authController.delete('/tokens', async (req: Request, res: Response) => {
+authController.delete("/tokens", async (req: Request, res: Response) => {
   const token = req.cookies.jid as string;
   if (!token) {
     throw new NoTokenProvidedError();
@@ -289,11 +289,11 @@ authController.delete('/tokens', async (req: Request, res: Response) => {
 
   await handleLogout(token);
 
-  res.clearCookie('jid', {
-    path: '/',
+  res.clearCookie("jid", {
+    path: "/",
   });
 
-  res.status(httpStatus.OK).json({ message: 'Logged out successfully' });
+  res.status(httpStatus.OK).json({ message: "Logged out successfully" });
 });
 
 /**
@@ -347,7 +347,7 @@ authController.delete('/tokens', async (req: Request, res: Response) => {
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-authController.post('/tokens/refresh', async (req: Request, res: Response) => {
+authController.post("/tokens/refresh", async (req: Request, res: Response) => {
   const token = req.cookies.jid as string;
 
   if (!token) {
@@ -356,11 +356,11 @@ authController.post('/tokens/refresh', async (req: Request, res: Response) => {
 
   const { accessToken, refreshToken } = await handleRefreshToken(token);
 
-  res.cookie('jid', refreshToken, {
+  res.cookie("jid", refreshToken, {
     httpOnly: true,
-    path: '/',
-    sameSite: 'lax',
-    secure: config.node_env === 'production',
+    path: "/",
+    sameSite: "lax",
+    secure: config.node_env === "production",
   });
 
   res.json({ accessToken });
@@ -438,21 +438,26 @@ authController.post('/tokens/refresh', async (req: Request, res: Response) => {
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-authController.post('/google', async (req: Request, res: Response) => {
-  const code: string = req.query.code as string;
+authController.post("/google", async (req: Request, res: Response) => {
+  const { code } = req.body;
 
   if (!code) {
     res
       .status(httpStatus.BAD_REQUEST)
-      .json({ message: 'Authorization code missing.' });
+      .json({ message: "Authorization code missing." });
     return;
   }
 
   const { newRefreshToken, message, accessToken, user } =
-    await handleGoogleAuthCallback(code.trim());
+    await handleGoogleAuthCallback(code);
 
   if (newRefreshToken) {
-    res.cookie('jid', newRefreshToken);
+    res.cookie(config.jwt.refresh_token.cookie_name, newRefreshToken, {
+      httpOnly: true,
+      path: "/",
+      sameSite: "lax",
+      secure: config.node_env === "production",
+    });
   }
 
   res.status(httpStatus.OK).json({

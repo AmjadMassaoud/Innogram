@@ -1,29 +1,29 @@
-import httpStatus from 'http-status';
-import dataSource from '../configs/orm.config';
+import httpStatus from "http-status";
+import dataSource from "../configs/orm.config";
 import {
   generateAccessToken,
   generateRefreshToken,
   verifyRefreshToken,
   invalidateRefreshToken,
-} from './token.service';
+} from "./token.service";
 
-import { UserAuthEntity } from '../entities/user-auth.entity';
-import { hashPassword, verifyPassword } from '../utils/password.util';
+import { UserAuthEntity } from "../entities/user-auth.entity";
+import { hashPassword, verifyPassword } from "../utils/password.util";
 import {
   AuthenticationError,
   InvalidCredentialsError,
   UserAlreadyExistsError,
   UserNotFoundError,
-} from '../custom-errors/auth.errors';
+} from "../custom-errors/auth.errors";
 import {
   ILoginReturnType,
   ILoginValueParam,
   TSignupReturnType,
   ISignupValueParam,
-} from '../common/interfaces/auth-provider-interfaces/login-value.interface';
-import { IRefreshTokenReturn } from '../common/interfaces/auth-provider-interfaces/token.interface';
-import { NoTokenProvidedError } from '../custom-errors/token.errors';
-import { ERegistrationMethod } from '../common/enums/registration-method.enum';
+} from "../common/interfaces/auth-provider-interfaces/login-value.interface";
+import { IRefreshTokenReturn } from "../common/interfaces/auth-provider-interfaces/token.interface";
+import { NoTokenProvidedError } from "../custom-errors/token.errors";
+import { ERegistrationMethod } from "../common/enums/registration-method.enum";
 
 const UserAuthRepo = dataSource.getRepository(UserAuthEntity);
 
@@ -75,7 +75,7 @@ export async function handleSignUp(
     }
 
     throw new AuthenticationError(
-      'An internal server error occurred during login.',
+      "An internal server error occurred during login.",
       httpStatus.INTERNAL_SERVER_ERROR,
     );
   }
@@ -90,13 +90,13 @@ export async function handleLogin(
     const user = await UserAuthRepo.findOneBy({ email: email });
 
     if (!user) {
-      throw new UserNotFoundError('User not found');
+      throw new UserNotFoundError("User not found");
     }
 
     const validPassword = await verifyPassword(password, user.password);
 
     if (!validPassword) {
-      throw new InvalidCredentialsError('Invalid password');
+      throw new InvalidCredentialsError("Invalid password");
     }
 
     const tokenPayload = {
@@ -134,7 +134,7 @@ export async function handleLogin(
 
     // For all other unexpected errors
     throw new AuthenticationError(
-      'An internal server error occurred during login.',
+      "An internal server error occurred during login.",
       httpStatus.INTERNAL_SERVER_ERROR,
     );
   }
@@ -151,7 +151,7 @@ export async function handleRefreshToken(
     });
 
     if (!user) {
-      throw new UserNotFoundError('User not found');
+      throw new UserNotFoundError("User not found");
     }
 
     const tokenPayload = {
@@ -175,7 +175,7 @@ export async function handleRefreshToken(
     }
 
     throw new AuthenticationError(
-      'An internal server error occurred during login.',
+      "An internal server error occurred during login.",
       httpStatus.INTERNAL_SERVER_ERROR,
     );
   }
@@ -194,14 +194,14 @@ export async function handleLogout(token: string): Promise<void> {
     ) {
       try {
         const params = new URLSearchParams();
-        params.append('token', user.googleRefreshToken);
+        params.append("token", user.googleRefreshToken);
 
         const revokeResponse = await fetch(
-          'https://oauth2.googleapis.com/revoke',
+          "https://oauth2.googleapis.com/revoke",
           {
-            method: 'POST',
+            method: "POST",
             headers: {
-              'Content-Type': 'application/x-www-form-urlencoded',
+              "Content-Type": "application/x-www-form-urlencoded",
             },
             body: params,
           },

@@ -1,7 +1,7 @@
-import { Module } from '@nestjs/common';
-import { AuthGatewayModule } from './auth/auth.gateway.module';
-import { ConfigLibModule } from '@app/config-lib';
-import { ThrottlerModule } from '@nestjs/throttler';
+import { Module } from "@nestjs/common";
+import { AuthGatewayModule } from "./clients/auth/auth.gateway.module";
+import { ConfigLibModule } from "@app/config-lib";
+import { ThrottlerModule } from "@nestjs/throttler";
 
 @Module({
   imports: [

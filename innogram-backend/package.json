@@ -17,7 +17,7 @@
     "start:dev:users-service": "cross-env NODE_ENV=development nest start users-service --watch",
     "start:dev:api-gateway": "cross-env NODE_ENV=development nest start api-gateway --watch",
     "start:dev:auth-service": "npm run start:dev --workspace=@innogram/auth-service",
-    "start:dev:all": "concurrently \"npm run start:dev:user-service\" \"npm run start:dev:api-gateway\" \"npm run start:dev:auth-service\"",
+    "start:dev:all": "concurrently \"npm run start:dev:api-gateway\" \"npm run start:dev:auth-service\"",
     "start:debug": "cross-env NODE_ENV=development nest start --debug --watch",
     "start:prod": "node dist/main",
     "start:prod:api-gateway": "NODE_ENV=production node dist/apps/innogram-backend/main",
