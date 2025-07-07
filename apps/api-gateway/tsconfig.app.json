@@ -3,8 +3,17 @@
   "compilerOptions": {
     "declaration": false,
     "outDir": "../../dist/apps/api-gateway",
-    "rootDir": "../../"
+    "rootDir": "../../",
+    "module": "NodeNext",
+    "moduleResolution": "nodenext"
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "test", "**/*spec.ts"]
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "test",
+    "**/*spec.ts"
+  ]
 }
