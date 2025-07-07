@@ -10,8 +10,11 @@ First, run the development server:
 
 Open [http://localhost:3500](http://localhost:3000) with your browser to see the result.
 
-Running Innogram on Docker
-Install docker:
-At the root of the project, run the following command:
-docker-compose up --build
-This would be enough to run build and run all containers.
+## Running Innogram on Docker
+
+1. Install docker:
+2. At the root of the project, run the following command:
+   ```bash
+   docker-compose up --build
+   ```
+   This would be enough to run build and run all containers.
