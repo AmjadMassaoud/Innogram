@@ -1,0 +1,16 @@
+# Ignore artifacts
+.next/
+node_modules/
+build/
+dist/
+out/
+
+# Ignore config files
+next.config.ts
+postcss.config.mjs
+
+# Ignore environment variables
+.env*
+
+# Ignore documentation
+README.md

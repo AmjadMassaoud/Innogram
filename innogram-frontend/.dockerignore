@@ -1,0 +1,21 @@
+# Git and Docker
+.git
+../../innogram-frontend/.gitignore
+.dockerignore
+Dockerfile*
+
+# Dependencies
+node_modules
+
+# Build artifacts
+dist
+
+# Logs and environment files
+*.log
+
+
+# Others
+README.md
+.prettierrc
+eslint.config.mjs
+.next
