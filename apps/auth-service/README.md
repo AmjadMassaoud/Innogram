@@ -40,7 +40,7 @@ management, and OAuth integration.
 - `POST /innogram/v1/passwords` — Request password reset
 - `POST /innogram/v1/passwords` — Reset password with token
 
-## Project Structure
+## Project Structure.
 
 ```
 /apps/auth-service
